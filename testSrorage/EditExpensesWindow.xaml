@@ -1,0 +1,42 @@
+﻿<Window x:Class="testSrorage.EditExpensesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:testSrorage"
+        mc:Ignorable="d"
+        Title="EditExpensesWindow" Height="300" Width="400">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ID -->
+        <TextBlock Grid.Row="0" Text="ID:" Margin="0,0,0,5"/>
+        <TextBox x:Name="txtExpenseId" Grid.Row="0" Margin="100,0,0,5" IsReadOnly="True"/>
+
+        <!-- Продукт -->
+        <TextBlock Grid.Row="1" Text="Продукт:" Margin="0,0,0,5"/>
+        <ComboBox x:Name="cmbExpenseProducts" Grid.Row="1" Margin="100,0,0,5" 
+                  DisplayMemberPath="Name"/>
+
+        <!-- Дата -->
+        <TextBlock Grid.Row="2" Text="Дата:" Margin="0,0,0,5"/>
+        <DatePicker x:Name="dpExpenseDate" Grid.Row="2" Margin="100,0,0,5"/>
+
+        <!-- Количество -->
+        <TextBlock Grid.Row="3" Text="Количество:" Margin="0,0,0,5"/>
+        <TextBox x:Name="txtExpenseQuantity" Grid.Row="3" Margin="100,0,0,5"/>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="btnSaveExpense" Content="Сохранить" Width="80" Margin="5" Click="btnSaveExpense_Click"/>
+            <Button x:Name="btnCancelExpense" Content="Отмена" Width="80" Margin="5" Click="btnCancelExpense_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
