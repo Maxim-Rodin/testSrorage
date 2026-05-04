@@ -109,7 +109,7 @@ namespace testSrorage
                 {
                     DateTime = arriveDate,
                     ProductId = existingProduct?.IdProduct ?? maneger.LastInsertedId,
-                    Quantiti = quantity
+                    Quantity = quantity
                 };
 
                 if (!maneger.AddArrivals(arrival))

@@ -61,7 +61,7 @@ namespace testSrorage.классы
                 dgReport.ItemsSource = currentReport;
 
 
-                int totalQuantity = currentReport.Sum(c => c.Quantiti);
+                int totalQuantity = currentReport.Sum(c => c.Quantity);
                 int recordCount = currentReport.Count;
 
                 UpdateSummary(totalQuantity, recordCount);

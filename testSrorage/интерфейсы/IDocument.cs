@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace testSrorage.классы.интерфейсы
 {
-    internal interface IDocument
+    public interface IDocument
     {
         DateTime DateTime { get; set; }
-
         int ProductId { get; set; }
-        int Quantiti { get; set; }
+        int Quantity { get; set; }
     }
 }

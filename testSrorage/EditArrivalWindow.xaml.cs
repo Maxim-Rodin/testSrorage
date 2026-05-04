@@ -34,7 +34,7 @@ namespace testSrorage
         {
             txtArrivalId.Text = arrival.IdArrivals.ToString();
             dpArrivalDate.SelectedDate = arrival.DateTime;
-            txtArrivalQuantity.Text = arrival.Quantiti.ToString();
+            txtArrivalQuantity.Text = arrival.Quantity.ToString();
 
            
             var products = manager.GetAllProducts();
@@ -70,7 +70,7 @@ namespace testSrorage
 
                 
                 arrival.DateTime = dpArrivalDate.SelectedDate.Value;
-                arrival.Quantiti = quantity;
+                arrival.Quantity = quantity;
                 arrival.ProductId = ((Products)cmbArrivalProducts.SelectedItem).IdProduct;
 
                 if (manager.UpdateArrival(arrival))

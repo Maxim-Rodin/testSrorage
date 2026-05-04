@@ -77,7 +77,7 @@ namespace testSrorage
                 { 
                     DateTime = dateTime,
                     ProductId= existingProduct?.IdProduct ?? maneger.LastInsertedId,
-                    Quantiti = quantity,
+                    Quantity = quantity,
 
                 };
                 if(!maneger.AddExpenses(expenses))

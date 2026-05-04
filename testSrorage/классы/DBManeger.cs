@@ -269,7 +269,7 @@ namespace testSrorage
                                 IdArrivals = reader.GetInt32("idArrivals"),
                                 ProductId = reader.GetInt32("productId"),
                                 DateTime = reader.GetDateTime("date").Date,
-                                Quantiti = reader.GetInt32("quantiti")
+                                Quantity = reader.GetInt32("quantity")
 
 
 
@@ -300,7 +300,7 @@ namespace testSrorage
                 UPDATE arrivals 
                 SET date = @date, 
                     productId = @productId, 
-                    quantiti = @quantiti 
+                    quantiti = @quantity 
                 WHERE idArrivals = @id";
 
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
@@ -308,7 +308,7 @@ namespace testSrorage
                     command.Parameters.AddWithValue("@id", arrival.IdArrivals);
                     command.Parameters.AddWithValue("@date", arrival.DateTime);
                     command.Parameters.AddWithValue("@productId", arrival.ProductId);
-                    command.Parameters.AddWithValue("@quantiti", arrival.Quantiti);
+                    command.Parameters.AddWithValue("@quantity", arrival.Quantity);
 
                     return command.ExecuteNonQuery() > 0;
                 }
@@ -333,15 +333,15 @@ namespace testSrorage
                 int nextArrivalId = GetNextArrivalId();
 
 
-                string query = @"INSERT INTO arrivals (idArrivals, date, productId, quantiti) 
-                         VALUES (@id, @date, @productId, @quantiti)";
+                string query = @"INSERT INTO arrivals (idArrivals, date, productId, quantity) 
+                         VALUES (@id, @date, @productId, @quantity)";
 
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", nextArrivalId);
                     command.Parameters.AddWithValue("@date", arrivals.DateTime);
                     command.Parameters.AddWithValue("@productId", arrivals.ProductId);
-                    command.Parameters.AddWithValue("@quantiti", arrivals.Quantiti);
+                    command.Parameters.AddWithValue("@quantity", arrivals.Quantity);
 
                     int affectedRows = command.ExecuteNonQuery();
                     return affectedRows > 0;
@@ -420,7 +420,7 @@ namespace testSrorage
                                 IdExpenses = reader.GetInt32("idExpenses"),
                                 ProductId =reader.GetInt32("ProductID"),
                                 DateTime = reader.GetDateTime("dateExpenses").Date,
-                                Quantiti = reader.GetInt32("quantityEx")
+                                Quantity = reader.GetInt32("quantityEx")
                                 
                             };
                             expenseses.Add(expenses);
@@ -463,7 +463,7 @@ namespace testSrorage
                     command.Parameters.AddWithValue("@id", expense.IdExpenses);
                     command.Parameters.AddWithValue("@date", expense.DateTime);
                     command.Parameters.AddWithValue("@productId", expense.ProductId);
-                    command.Parameters.AddWithValue("@quantity", expense.Quantiti);
+                    command.Parameters.AddWithValue("@quantity", expense.Quantity);
 
                     return command.ExecuteNonQuery() > 0;
                 }
@@ -526,13 +526,13 @@ namespace testSrorage
 
                 int nextExpensesId = GetNextExpenses();
                 string query = @"INSERT INTO expenses (idExpenses, dateExpenses, ProductID, quantityEx) 
-                         VALUES (@id, @date, @productId, @quantiti)";
+                         VALUES (@id, @date, @productId, @quantity)";
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", nextExpensesId);
                     command.Parameters.AddWithValue("@date", expenses.DateTime);
                     command.Parameters.AddWithValue("@productId",expenses.ProductId);
-                    command.Parameters.AddWithValue("@quantiti", expenses.Quantiti);
+                    command.Parameters.AddWithValue("@quantity", expenses.Quantity);
 
                     int affectedRows = command.ExecuteNonQuery();
                     return affectedRows > 0;
@@ -694,16 +694,16 @@ namespace testSrorage
 
          
             string query = @"
-SELECT 
-    a.idArrivals,
-    a.date,
-    a.productId,
-    a.quantiti,
-    DATE(a.date) as DateOnly
-FROM arrivals a
-WHERE DATE(a.date) >= DATE(@startDate) 
-  AND DATE(a.date) <= DATE(@endDate)
-ORDER BY a.date DESC";
+                            SELECT 
+                                a.idArrivals,
+                                a.date,
+                                a.productId,
+                                a.quantity,
+                                DATE(a.date) as DateOnly
+                            FROM arrivals a
+                            WHERE DATE(a.date) >= DATE(@startDate) 
+                              AND DATE(a.date) <= DATE(@endDate)
+                            ORDER BY a.date DESC";
 
             try
             {
@@ -729,7 +729,7 @@ ORDER BY a.date DESC";
                                 IdArrivals = reader.GetInt32("idArrivals"),
                                 DateTime = reader.GetDateTime("date"),
                                 ProductId = reader.GetInt32("productId"),
-                                Quantiti = reader.GetInt32("quantiti")
+                                Quantity = reader.GetInt32("quantity")
                             });
                         }
                         MessageBox.Show($"Найдено записей: {count}");
@@ -776,7 +776,7 @@ ORDER BY a.date DESC";
                                 IdExpenses = reader.GetInt32("idExpenses"),
                                 DateTime = reader.GetDateTime("dateExpenses"),
                                 ProductId = reader.GetInt32("ProductID"),
-                                Quantiti = reader.GetInt32("quantityEx"),
+                                Quantity = reader.GetInt32("quantityEx"),
                                 
                             });
                         }

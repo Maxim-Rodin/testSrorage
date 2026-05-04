@@ -32,7 +32,7 @@ namespace testSrorage
         {
             txtExpenseId.Text = expense.IdExpenses.ToString();
             dpExpenseDate.SelectedDate = expense.DateTime;
-            txtExpenseQuantity.Text =expense.Quantiti.ToString();
+            txtExpenseQuantity.Text =expense.Quantity.ToString();
 
            
             var products = manager.GetAllProducts();
@@ -68,7 +68,7 @@ namespace testSrorage
 
                
                 expense.DateTime = dpExpenseDate.SelectedDate.Value;
-                expense.Quantiti = quantity;
+                expense.Quantity = quantity;
                 expense.IdExpenses = ((Products)cmbExpenseProducts.SelectedItem).IdProduct;
 
                 if (manager.UpdateExpense(expense))
