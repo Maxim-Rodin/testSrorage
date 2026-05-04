@@ -7,7 +7,7 @@ using testSrorage.классы.интерфейсы;
 
 namespace testSrorage.классы
 {
-    public class Expenses : IDocument
+    public class Expenses : IDocument 
     {
         public int IdExpenses { get; set; }
         public DateTime DateTime { get; set; }

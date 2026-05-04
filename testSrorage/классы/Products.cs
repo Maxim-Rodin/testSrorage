@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace testSrorage
 {
-    public class Products
+    public class Products 
     {
         public int IdProduct { get; set; }
         public string Name { get; set; }

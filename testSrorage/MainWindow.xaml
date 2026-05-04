@@ -1,78 +1,62 @@
-﻿<Window x:Name="checkBtn" x:Class="testSrorage.MainWindow"
+﻿<Window x:Class="testSrorage.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:testSrorage"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Складская система" Height="500" Width="900"
+        Background="#F5F5F5">
 
-    <Canvas>
-        <!-- DataGrid -->
-        <DataGrid x:Name="datagrid" 
-                  Canvas.Left="10" 
-                  Canvas.Top="10" 
-                  Width="780" 
-                  Height="165"/>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <!-- Кнопки с абсолютным позиционированием -->
-        <Button x:Name="checkExpensesBtn" 
-                Content="Посмотреть расходы" 
-                Canvas.Left="177" 
-                Canvas.Top="310" 
-                Width="138" 
-                Height="43" 
-                Click="checkExpensesBtn_Click"/>
+       
+        <TextBlock Text="Система учета склада"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Margin="5"/>
 
-        <Button x:Name="addExpenesBtn" 
-                Content="Добавить расход" 
-                Canvas.Left="177" 
-                Canvas.Top="358" 
-                Width="138" 
-                Height="47" 
-                Click="addExpenesBtn_Click"/>
+       
+        <Border Grid.Row="1" Background="White" CornerRadius="5" Padding="5" Margin="0,10,0,10">
+            <DataGrid x:Name="datagrid"
+                      AutoGenerateColumns="True"
+                      IsReadOnly="True"/>
+        </Border>
 
-        <Button x:Name="checkArriveBtn" 
-                Content="Просмотр приходов" 
-                Canvas.Left="331" 
-                Canvas.Top="308" 
-                Width="138" 
-                Height="45" 
-                Click="checkArriveBtn_Click"/>
+       
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <Button x:Name="arrivalBtn" 
-                Content="Добавить приход" 
-                Canvas.Left="331" 
-                Canvas.Top="358" 
-                Width="138" 
-                Height="47" 
-                Click="arrivalBtn_Click"/>
+           
+            <StackPanel Grid.Column="0" Margin="5">
+                <TextBlock Text="Приходы" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Button Content="Просмотр приходов" Height="35" Margin="0,2" Click="checkArriveBtn_Click"/>
+                <Button Content="Добавить приход" Height="35" Margin="0,2" Click="arrivalBtn_Click"/>
+                <Button Content="Фильтр приходов" Height="35" Margin="0,2" Click="arriveDataBtn_Click"/>
+            </StackPanel>
 
-        <Button x:Name="checkBtn1" 
-                Content="Просмотр продуктов" 
-                Canvas.Left="478" 
-                Canvas.Top="308" 
-                Width="140" 
-                Height="45" 
-                Click="checkBtn1_Click" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            
+            <StackPanel Grid.Column="1" Margin="5">
+                <TextBlock Text="Товары" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Button Content="Просмотр продуктов" Height="35" Margin="0,2" Click="checkBtn1_Click"/>
+                <Button Content="Изменить" Height="35" Margin="0,2" Click="changeBtn_Click"/>
+                <Button Content="Удалить" Height="35" Margin="0,2" Click="deletBtn_Click"/>
+            </StackPanel>
 
-        <Button Content="Проверить соединение" 
-                Canvas.Left="478" 
-                Canvas.Top="358" 
-                Width="138" 
-                Height="47" 
-                Click="Button_Click" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+            
+            <StackPanel Grid.Column="2" Margin="5">
+                <TextBlock Text="Расходы" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Button Content="Посмотреть расходы" Height="35" Margin="0,2" Click="checkExpensesBtn_Click"/>
+                <Button Content="Добавить расход" Height="35" Margin="0,2" Click="addExpenesBtn_Click"/>
+                <Button Content="Фильтр расходов" Height="35" Margin="0,2" Click="expensesDataBtn_Click"/>
+                <Button Content="Проверить соединение" Height="35" Margin="0,10,0,0" Click="Button_Click"/>
+            </StackPanel>
 
-        <Button x:Name="changeBtn" 
-                Content="Изменить" 
-                Canvas.Left="427" 
-                Canvas.Top="217" 
-                Width="138" 
-                Height="49" HorizontalAlignment="Left" VerticalAlignment="Center" Click="changeBtn_Click"/>
-        <Button x:Name="deletBtn" Content="Удалить" Canvas.Left="246" Canvas.Top="217" Height="49" Width="138" HorizontalAlignment="Left" VerticalAlignment="Top" Click="deletBtn_Click"/>
-        <Button x:Name="arriveDataBtn" Content="Фильтр приходов" Canvas.Left="35" Canvas.Top="311" Height="42" Width="137" HorizontalAlignment="Left" VerticalAlignment="Top" Click="arriveDataBtn_Click"/>
-        <Button x:Name="expensesDataBtn" Content="Фильтр расходов" Canvas.Left="623" Canvas.Top="310" Height="43" Width="140" HorizontalAlignment="Center" VerticalAlignment="Top" Click="expensesDataBtn_Click"/>
-    </Canvas>
-
+        </Grid>
+    </Grid>
 </Window>
- 

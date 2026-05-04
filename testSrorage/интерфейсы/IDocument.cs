@@ -11,5 +11,7 @@ namespace testSrorage.классы.интерфейсы
         DateTime DateTime { get; set; }
         int ProductId { get; set; }
         int Quantity { get; set; }
+
+      
     }
 }

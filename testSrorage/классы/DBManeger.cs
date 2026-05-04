@@ -213,11 +213,12 @@ namespace testSrorage
             try
             {
                 connect.OpenConnection();
-                string query = "SELECT * FROM products WHERE nameProduct = @name";
+                string trimmedName = name.Trim();
+                string query = "SELECT * FROM products WHERE LOWER(nameProduct) = LOWER(@name)";
 
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
-                    command.Parameters.AddWithValue("@name", name);
+                    command.Parameters.AddWithValue("@name", trimmedName);
 
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
@@ -798,12 +799,6 @@ namespace testSrorage
         
 
         #endregion
-
-
-
-
-
-
 
 
 
