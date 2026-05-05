@@ -31,7 +31,6 @@ namespace testSrorage
         {
             try
             {
-
                 if (string.IsNullOrEmpty(nameTxBx.Text))
                 {
                     MessageBox.Show("Введите имя товара!");
@@ -55,48 +54,48 @@ namespace testSrorage
 
                 string productName = nameTxBx.Text.Trim();
                 DateTime dateTime = dataPiker.SelectedDate.Value;
-                int productId = -1;
 
+                
                 Products existingProduct = maneger.GetProductByName(productName);
 
-                if (existingProduct != null && existingProduct.Quantity > quantity)
+              
+                if (existingProduct == null)
                 {
-                    productId = existingProduct.IdProduct;
-                    maneger.UpdateProductQuantity(productId, quantity , false);
-                    MessageBox.Show($"Обновлено количество существующего продукта '{productName}'");
+                    MessageBox.Show($"Товар '{productName}' не найден в базе данных!");
+                    return;  
                 }
-                else if ( existingProduct !=null &&existingProduct.Quantity <quantity) 
+
+               
+                if (existingProduct.Quantity < quantity)
                 {
-                    MessageBox.Show($"Не возможно провести расход требуемый вычет {quantity}, на складе сейчас {existingProduct.Quantity}");
+                    MessageBox.Show($"Невозможно провести расход: требуется {quantity}, на складе {existingProduct.Quantity}");
+                    return;  
                 }
-                else
+
+                
+                maneger.UpdateProductQuantity(existingProduct.IdProduct, quantity, false);
+
+               
+                Expenses expenses = new Expenses
                 {
-                    MessageBox.Show("Нет такого продукта!");
-                }
-                Expenses expenses = new Expenses 
-                { 
                     DateTime = dateTime,
-                    ProductId= existingProduct?.IdProduct ?? maneger.LastInsertedId,
+                    ProductId = existingProduct.IdProduct, 
                     Quantity = quantity,
-
                 };
-                if(!maneger.AddExpenses(expenses))
-                {
-                    throw new Exception("Ошибка при cохранении  расхода !");
 
+                if (!maneger.AddExpenses(expenses))
+                {
+                    throw new Exception("Ошибка при сохранении расхода!");
                 }
+
                 MessageBox.Show("Расход успешно добавлен!");
                 IsDataSaved = true;
                 Close();
-
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка добавления расхода {ex.Message}");
-
+                MessageBox.Show($"Ошибка добавления расхода: {ex.Message}");
             }
-
-
         }
 
         private void canсelBtn_Click(object sender, RoutedEventArgs e)

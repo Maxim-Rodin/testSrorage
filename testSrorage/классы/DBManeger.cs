@@ -526,7 +526,7 @@ namespace testSrorage
                 connect.OpenConnection();
 
                 int nextExpensesId = GetNextExpenses();
-                string query = @"INSERT INTO expenses (idExpenses, dateExpenses, ProductID, quantityEx) 
+                string query = @"INSERT INTO expenses (idExpenses, dateExpenses, ProductID, quantity) 
                          VALUES (@id, @date, @productId, @quantity)";
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
@@ -691,8 +691,7 @@ namespace testSrorage
             List<Arrivals> arrivals = new List<Arrivals>();
 
             
-            MessageBox.Show($"SQL запрос: startDate={startDate:yyyy-MM-dd}, endDate={endDate:yyyy-MM-dd}");
-
+            
          
             string query = @"
                             SELECT 
@@ -717,7 +716,7 @@ namespace testSrorage
                     command.Parameters.AddWithValue("@endDate", endDate.ToString("yyyy-MM-dd"));
 
                    
-                    MessageBox.Show($"Выполняем запрос: {command.CommandText}");
+                   
 
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
