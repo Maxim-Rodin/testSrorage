@@ -38,7 +38,8 @@ namespace testSrorage
                     return;
                 }
 
-                currentReport = storageService.GetExpensesByDateRange(startDate, endDate);
+                // Исправлено: используем универсальный метод GetDocumentsByDateRange<Expense>
+                currentReport = storageService.GetDocumentsByDateRange<Expense>(startDate, endDate);
 
                 if (currentReport.Count == 0)
                 {

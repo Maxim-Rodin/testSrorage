@@ -4,7 +4,7 @@ using testSrorage.Domain.Attributes;
 namespace testSrorage.Domain
 {
     [Table("arrivals")]
-    public class Arrival : BaseEntity, IStorageDocument
+    public class Arrival : BaseEntity, IStorageDocument, IIncomingDocument
     {
         public DateTime DateTime { get; set; }
         public int ProductId { get; set; }

@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 using testSrorage.Application;
 using testSrorage.Application.Interfaces;
@@ -10,6 +13,7 @@ namespace testSrorage
     public partial class MainWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
+        private Type currentViewType;
 
         public MainWindow()
         {
@@ -30,7 +34,7 @@ namespace testSrorage
         {
             AddArrivalWindow addArrivalWindow = new AddArrivalWindow();
             addArrivalWindow.ShowDialog();
-            LoadProducts();
+            RefreshCurrentView();
         }
 
         private void checkArriveBtn_Click(object sender, RoutedEventArgs e)
@@ -47,7 +51,7 @@ namespace testSrorage
         {
             AddExpensesWindow addExpensesWindow = new AddExpensesWindow();
             addExpensesWindow.ShowDialog();
-            LoadProducts();
+            RefreshCurrentView();
         }
 
         private void deletBtn_Click(object sender, RoutedEventArgs e)
@@ -60,34 +64,30 @@ namespace testSrorage
                     return;
                 }
 
-                if (datagrid.SelectedItem is Product product)
-                {
-                    int relatedCount = storageService.CountProductDocuments(product.Id);
-                    if (relatedCount > 0)
-                    {
-                        MessageBoxResult confirmation = MessageBox.Show(
-                            "У продукта есть " + relatedCount + " связанных записей (приходы/расходы).\nУдалить продукт и все связанные записи?",
-                            "Подтверждение удаления",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
+                object selected = datagrid.SelectedItem;
+                Type itemType = selected.GetType();
 
-                        if (confirmation != MessageBoxResult.Yes)
-                            return;
-                    }
+                PropertyInfo idProp = itemType.GetProperty(nameof(BaseEntity.Id));
+                if (idProp == null)
+                {
+                    MessageBox.Show("У выбранного объекта нет свойства Id.");
+                    return;
+                }
 
-                    ShowResult(storageService.DeleteProduct(product));
-                    LoadProducts();
-                }
-                else if (datagrid.SelectedItem is Arrival arrival)
-                {
-                    ShowResult(storageService.DeleteArrival(arrival));
-                    LoadArrivals();
-                }
-                else if (datagrid.SelectedItem is Expense expense)
-                {
-                    ShowResult(storageService.DeleteExpense(expense));
-                    LoadExpenses();
-                }
+                int id = (int)idProp.GetValue(selected, null);
+
+                MethodInfo deleteMethod = storageService.GetType()
+                    .GetMethod(nameof(IStorageService.Delete))
+                    .MakeGenericMethod(itemType);
+
+                var result = (OperationResult)deleteMethod.Invoke(storageService, new object[] { id });
+
+                ShowResult(result);
+                RefreshCurrentView();
+            }
+            catch (TargetInvocationException tie) // unwrap inner exception for clarity
+            {
+                MessageBox.Show("Ошибка удаления данных: " + (tie.InnerException?.Message ?? tie.Message));
             }
             catch (Exception ex)
             {
@@ -103,24 +103,8 @@ namespace testSrorage
                 return;
             }
 
-            if (datagrid.SelectedItem is Product product)
-            {
-                EditProductWindow editProductWindow = new EditProductWindow(product);
-                if (editProductWindow.ShowDialog() == true)
-                    LoadProducts();
-            }
-            else if (datagrid.SelectedItem is Arrival arrival)
-            {
-                EditArrivalWindow editArrivalWindow = new EditArrivalWindow(arrival);
-                if (editArrivalWindow.ShowDialog() == true)
-                    LoadArrivals();
-            }
-            else if (datagrid.SelectedItem is Expense expense)
-            {
-                EditExpensesWindow editExpensesWindow = new EditExpensesWindow(expense);
-                if (editExpensesWindow.ShowDialog() == true)
-                    LoadExpenses();
-            }
+            object selected = datagrid.SelectedItem;
+            OpenEditWindowForItem(selected);
         }
 
         private void arriveDataBtn_Click(object sender, RoutedEventArgs e)
@@ -137,17 +121,105 @@ namespace testSrorage
 
         private void LoadProducts()
         {
-            LoadGrid(() => storageService.GetProducts());
+            LoadGridByType(typeof(Product));
         }
 
         private void LoadArrivals()
         {
-            LoadGrid(() => storageService.GetArrivals());
+            LoadGridByType(typeof(Arrival));
         }
 
         private void LoadExpenses()
         {
-            LoadGrid(() => storageService.GetExpenses());
+            LoadGridByType(typeof(Expense));
+        }
+
+        private void LoadGridByType(Type type)
+        {
+            try
+            {
+                datagrid.ItemsSource = null;
+
+                MethodInfo getAll = storageService.GetType().GetMethod(nameof(IStorageService.GetAll))
+                    .MakeGenericMethod(type);
+
+                var list = getAll.Invoke(storageService, null);
+
+                datagrid.ItemsSource = (IEnumerable)list;
+                currentViewType = type;
+            }
+            catch (TargetInvocationException tie)
+            {
+                MessageBox.Show("Ошибка загрузки данных: " + (tie.InnerException?.Message ?? tie.Message));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки данных: " + ex.Message);
+            }
+        }
+
+        private void RefreshCurrentView()
+        {
+            if (currentViewType != null)
+                LoadGridByType(currentViewType);
+        }
+
+        private void OpenEditWindowForItem(object item)
+        {
+            Type itemType = item.GetType();
+            string windowName = "Edit" + itemType.Name + "Window";
+
+            Type windowType = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .FirstOrDefault(t => string.Equals(t.Name, windowName, StringComparison.OrdinalIgnoreCase));
+
+            if (windowType == null)
+            {
+                MessageBox.Show("Окно редактирования для типа " + itemType.Name + " не найдено.");
+                return;
+            }
+
+            // Найти конструктор, принимающий объект нужного типа
+            ConstructorInfo ctor = windowType.GetConstructors()
+                .FirstOrDefault(c =>
+                {
+                    var ps = c.GetParameters();
+                    return ps.Length == 1 && ps[0].ParameterType.IsAssignableFrom(itemType);
+                });
+
+            object windowInstance;
+            if (ctor != null)
+            {
+                windowInstance = ctor.Invoke(new object[] { item });
+            }
+            else
+            {
+                // если конструктора с параметром нет — попробуем без параметров и установить DataContext (если нужно)
+                ctor = windowType.GetConstructor(Type.EmptyTypes);
+                if (ctor == null)
+                {
+                    MessageBox.Show("Не найден подходящий конструктор для окна редактирования " + windowName);
+                    return;
+                }
+                windowInstance = ctor.Invoke(null);
+
+                // попытка установить DataContext = item, если есть такое свойство
+                PropertyInfo dc = windowType.GetProperty("DataContext");
+                if (dc != null && dc.CanWrite)
+                    dc.SetValue(windowInstance, item, null);
+            }
+
+            // Показать окно (вызов ShowDialog)
+            MethodInfo showDialog = windowType.GetMethod("ShowDialog", Type.EmptyTypes);
+            if (showDialog == null)
+            {
+                MessageBox.Show("Окно редактирования не поддерживает ShowDialog.");
+                return;
+            }
+
+            var res = showDialog.Invoke(windowInstance, null) as bool?;
+            if (res == true)
+                RefreshCurrentView();
         }
 
         private void LoadGrid<T>(Func<List<T>> loadData)

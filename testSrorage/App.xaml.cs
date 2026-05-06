@@ -42,10 +42,8 @@ namespace testSrorage
             DatabaseInitializer initializer = new DatabaseInitializer(connectionFactory);
             initializer.Initialize(typeof(Product).Assembly);
 
-            StorageService = new StorageService(
-                new GenericRepository<Product>(connectionFactory),
-                new GenericRepository<Arrival>(connectionFactory),
-                new GenericRepository<Expense>(connectionFactory));
+            IRepositoryFactory repoFactory = new RepositoryFactory(connectionFactory);
+            StorageService = new StorageService(repoFactory); // Исправлено: передаётся только repoFactory
         }
     }
 }

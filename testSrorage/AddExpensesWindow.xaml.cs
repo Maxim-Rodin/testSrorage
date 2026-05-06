@@ -1,6 +1,8 @@
+using System;
 using System.Windows;
 using testSrorage.Application;
 using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
@@ -23,8 +25,7 @@ namespace testSrorage
                 return;
             }
 
-            int quantity;
-            if (!int.TryParse(quantityTxBx.Text, out quantity) || quantity <= 0)
+            if (!int.TryParse(quantityTxBx.Text, out int quantity) || quantity <= 0)
             {
                 MessageBox.Show("Количество должно быть больше 0!");
                 quantityTxBx.Focus();
@@ -38,7 +39,7 @@ namespace testSrorage
                 return;
             }
 
-            OperationResult result = storageService.AddExpense(
+            OperationResult result = storageService.AddDocument<Expense>(
                 nameTxBx.Text,
                 quantity,
                 dataPiker.SelectedDate.Value);
@@ -60,8 +61,7 @@ namespace testSrorage
                 MessageBoxResult result = MessageBox.Show(
                     "Вы хотите отменить операцию? Все изменения будут потеряны.",
                     "Подтверждение отмены",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                    MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                     Close();

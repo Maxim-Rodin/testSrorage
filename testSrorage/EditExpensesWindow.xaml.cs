@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Windows;
 using testSrorage.Application;
@@ -24,7 +25,7 @@ namespace testSrorage
             dpExpenseDate.SelectedDate = expense.DateTime;
             txtExpenseQuantity.Text = expense.Quantity.ToString();
 
-            var products = storageService.GetProducts();
+            var products = storageService.GetAll<Product>();
             cmbExpenseProducts.ItemsSource = products;
 
             Product currentProduct = products.FirstOrDefault(p => p.Id == expense.ProductId);
@@ -46,8 +47,7 @@ namespace testSrorage
                 return;
             }
 
-            int quantity;
-            if (!int.TryParse(txtExpenseQuantity.Text, out quantity) || quantity <= 0)
+            if (!int.TryParse(txtExpenseQuantity.Text, out int quantity) || quantity <= 0)
             {
                 MessageBox.Show("Введите корректное количество.");
                 return;
@@ -57,7 +57,7 @@ namespace testSrorage
             expense.Quantity = quantity;
             expense.ProductId = ((Product)cmbExpenseProducts.SelectedItem).Id;
 
-            OperationResult result = storageService.UpdateExpense(expense);
+            OperationResult result = storageService.UpdateDocument<Expense>(expense);
             MessageBox.Show(result.Message);
 
             if (!result.Success)

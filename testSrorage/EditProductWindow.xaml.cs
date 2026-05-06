@@ -1,7 +1,9 @@
+using System;
 using System.Windows;
 using testSrorage.Application;
 using testSrorage.Application.Interfaces;
 using testSrorage.Domain;
+using testSrorage.Infrastructure;
 
 namespace testSrorage
 {
@@ -33,8 +35,7 @@ namespace testSrorage
                 return;
             }
 
-            int quantity;
-            if (!int.TryParse(txtProductQuantity.Text, out quantity) || quantity < 0)
+            if (!int.TryParse(txtProductQuantity.Text, out int quantity) || quantity < 0)
             {
                 MessageBox.Show("Введите корректное количество (0 или больше).");
                 txtProductQuantity.Focus();
@@ -45,7 +46,7 @@ namespace testSrorage
             product.Name = txtProductName.Text.Trim();
             product.Quantity = quantity;
 
-            OperationResult result = storageService.UpdateProduct(product);
+            OperationResult result = storageService.Update<Product>(product); // Используем Update<T>
             MessageBox.Show(result.Message);
 
             if (!result.Success)

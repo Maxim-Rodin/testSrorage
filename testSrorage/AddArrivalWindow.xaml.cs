@@ -1,6 +1,8 @@
+using System;
 using System.Windows;
 using testSrorage.Application;
 using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
@@ -12,6 +14,44 @@ namespace testSrorage
         public AddArrivalWindow()
         {
             InitializeComponent();
+        }
+
+        private void aplyBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(nameTxBx.Text))
+            {
+                MessageBox.Show("Введите имя товара!");
+                nameTxBx.Focus();
+                return;
+            }
+
+            if (!int.TryParse(quantityTxBx.Text, out int quantity) || quantity <= 0)
+            {
+                MessageBox.Show("Количество должно быть больше 0!");
+                quantityTxBx.Focus();
+                return;
+            }
+
+            if (dataPiker.SelectedDate == null)
+            {
+                MessageBox.Show("Выберите дату!");
+                dataPiker.Focus();
+                return;
+            }
+
+            OperationResult result = storageService.AddDocument<Arrival>(
+                nameTxBx.Text,
+                quantity,
+                dataPiker.SelectedDate.Value);
+
+            MessageBox.Show(result.Message);
+
+            if (!result.Success)
+                return;
+
+            isDataSaved = true;
+            DialogResult = true;
+            Close();
         }
 
         private void canсelBtn_Click(object sender, RoutedEventArgs e)
@@ -30,45 +70,6 @@ namespace testSrorage
                 return;
             }
 
-            Close();
-        }
-
-        private void aplyBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(nameTxBx.Text))
-            {
-                MessageBox.Show("Введите имя товара!");
-                nameTxBx.Focus();
-                return;
-            }
-
-            int quantity;
-            if (!int.TryParse(quantityTxBx.Text, out quantity) || quantity <= 0)
-            {
-                MessageBox.Show("Количество должно быть больше 0!");
-                quantityTxBx.Focus();
-                return;
-            }
-
-            if (dataPiker.SelectedDate == null)
-            {
-                MessageBox.Show("Выберите дату!");
-                dataPiker.Focus();
-                return;
-            }
-
-            OperationResult result = storageService.AddArrival(
-                nameTxBx.Text,
-                quantity,
-                dataPiker.SelectedDate.Value);
-
-            MessageBox.Show(result.Message);
-
-            if (!result.Success)
-                return;
-
-            isDataSaved = true;
-            DialogResult = true;
             Close();
         }
     }

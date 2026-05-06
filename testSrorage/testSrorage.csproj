@@ -66,6 +66,10 @@
     <Compile Include="AddExpensesWindow.xaml.cs">
       <DependentUpon>AddExpensesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Application\Interfaces\IRepositoryFactory.cs" />
+    <Compile Include="Application\RepositoryFactory.cs" />
+    <Compile Include="Domain\IIncomingDocument.cs" />
+    <Compile Include="Domain\IOutgoingDocument.cs" />
     <Compile Include="EditArrivalWindow.xaml.cs">
       <DependentUpon>EditArrivalWindow.xaml</DependentUpon>
     </Compile>

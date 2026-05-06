@@ -41,7 +41,8 @@ namespace testSrorage
                     return;
                 }
 
-                currentReport = storageService.GetArrivalsByDateRange(startDate, endDate);
+                // Исправлено: используем универсальный метод получения документов по диапазону дат
+                currentReport = storageService.GetDocumentsByDateRange<Arrival>(startDate, endDate);
 
                 if (currentReport.Count == 0)
                 {
