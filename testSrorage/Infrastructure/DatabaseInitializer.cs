@@ -8,10 +8,12 @@ using testSrorage.Domain.Attributes;
 
 namespace testSrorage.Infrastructure
 {
+    // Инициализатор базы данных: создаёт базу (если нужно) и таблицы для отмеченных сущностей.
     public sealed class DatabaseInitializer
     {
         private readonly DbConnectionFactory connectionFactory;
 
+        // Конструктор — принимает фабрику подключений.
         public DatabaseInitializer(DbConnectionFactory connectionFactory)
         {
             if (connectionFactory == null)
@@ -20,6 +22,7 @@ namespace testSrorage.Infrastructure
             this.connectionFactory = connectionFactory;
         }
 
+        // Инициализирует базу и таблицы для типов из переданных сборок (или текущей по умолчанию).
         public void Initialize(params Assembly[] assemblies)
         {
             EnsureDatabaseExists();
@@ -34,6 +37,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Создаёт базу данных, если она не существует.
         private void EnsureDatabaseExists()
         {
             string databaseName = connectionFactory.DatabaseName;
@@ -52,6 +56,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Получает типы сущностей (классы BaseEntity с атрибутом Table).
         private static List<Type> GetEntityTypes(IEnumerable<Assembly> assemblies)
         {
             IEnumerable<Assembly> source = assemblies == null || !assemblies.Any()
@@ -68,6 +73,7 @@ namespace testSrorage.Infrastructure
                 .ToList();
         }
 
+        // Создаёт таблицу для типа сущности, если её ещё нет.
         private static void EnsureTableExists(MySqlConnection connection, Type entityType)
         {
             string tableName = EntityMetadata.GetTableName(entityType);
@@ -84,6 +90,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Создаёт определение столбца SQL для свойства.
         private static string CreateColumnDefinition(PropertyInfo property)
         {
             if (property.Name == nameof(BaseEntity.Id))
@@ -97,6 +104,7 @@ namespace testSrorage.Infrastructure
                    " " + GetNullability(property.PropertyType);
         }
 
+        // Подбирает SQL тип для CLR типа.
         private static string GetSqlType(Type propertyType)
         {
             Type type = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
@@ -119,6 +127,7 @@ namespace testSrorage.Infrastructure
             throw new NotSupportedException("Тип свойства не поддерживается ORM-инициализатором: " + type.FullName);
         }
 
+        // Возвращает NULL/NOT NULL для колонки в зависимости от типа свойства.
         private static string GetNullability(Type propertyType)
         {
             if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)

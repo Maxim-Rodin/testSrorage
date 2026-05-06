@@ -3,6 +3,7 @@ using testSrorage.Domain.Attributes;
 
 namespace testSrorage.Domain
 {
+    // —ущность расхода Ч документ, уменьшающий остаток (IOutgoingDocument).
     [Table("expenses")]
     public class Expense : BaseEntity, IStorageDocument, IOutgoingDocument
     {

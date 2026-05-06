@@ -6,16 +6,19 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Окно добавления расхода (создаёт запись Expense и корректирует остатки).
     public partial class AddExpensesWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private bool isDataSaved;
 
+        // Конструктор окна — инициализация компонентов.
         public AddExpensesWindow()
         {
             InitializeComponent();
         }
 
+        // Обработчик кнопки применения: валидация и добавление расхода.
         private void aplyBtn_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(nameTxBx.Text))
@@ -54,6 +57,7 @@ namespace testSrorage
             Close();
         }
 
+        // Обработчик кнопки отмены: подтверждение закрытия без сохранения.
         private void canсelBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!isDataSaved)

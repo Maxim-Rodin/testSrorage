@@ -7,11 +7,13 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Окно редактирования записи расхода.
     public partial class EditExpensesWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private readonly Expense expense;
 
+        // Конструктор принимает выбранную запись для редактирования.
         public EditExpensesWindow(Expense selectedExpense)
         {
             InitializeComponent();
@@ -19,6 +21,7 @@ namespace testSrorage
             LoadData();
         }
 
+        // Загружает данные в форму редактирования.
         private void LoadData()
         {
             txtExpenseId.Text = expense.Id.ToString();
@@ -33,6 +36,7 @@ namespace testSrorage
                 cmbExpenseProducts.SelectedItem = currentProduct;
         }
 
+        // Обработчик кнопки сохранения: обновляет документ через сервис.
         private void btnSaveExpense_Click(object sender, RoutedEventArgs e)
         {
             if (cmbExpenseProducts.SelectedItem == null)
@@ -67,6 +71,7 @@ namespace testSrorage
             Close();
         }
 
+        // Обработчик кнопки отмены редактирования.
         private void btnCancelExpense_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;

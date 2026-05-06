@@ -8,10 +8,12 @@ using testSrorage.Domain;
 
 namespace testSrorage.Application
 {
+    // Реализация сервиса хранения: оборачивает репозитории и содержит бизнес-логику.
     public sealed class StorageService : IStorageService
     {
         private readonly IRepositoryFactory repositoryFactory;
 
+        // Конструктор — получает фабрику репозиториев.
         public StorageService(IRepositoryFactory repositoryFactory)
         {
             if (repositoryFactory == null)
@@ -20,6 +22,7 @@ namespace testSrorage.Application
             this.repositoryFactory = repositoryFactory;
         }
 
+        // Проверка подключения — пробует получить данные из репозитория Product.
         public OperationResult CheckConnection()
         {
             try
@@ -34,16 +37,19 @@ namespace testSrorage.Application
         }
 
         // Generic CRUD
+        // Возвращает все записи указанного типа.
         public List<T> GetAll<T>() where T : BaseEntity, new()
         {
             return repositoryFactory.GetRepository<T>().GetAll();
         }
 
+        // Возвращает запись по Id.
         public T GetById<T>(int id) where T : BaseEntity, new()
         {
             return repositoryFactory.GetRepository<T>().GetById(id);
         }
 
+        // Вставляет сущность и устанавливает ей Id.
         public OperationResult Insert<T>(T entity) where T : BaseEntity, new()
         {
             try
@@ -58,6 +64,7 @@ namespace testSrorage.Application
             }
         }
 
+        // Обновляет сущность.
         public OperationResult Update<T>(T entity) where T : BaseEntity, new()
         {
             try
@@ -71,7 +78,7 @@ namespace testSrorage.Application
             }
         }
 
-        // Изменённый универсальный Delete: если T == Product — выполняем каскадное удаление связанных документов
+        // Удаляет сущность; для Product вызывает каскадное удаление связанных документов.
         public OperationResult Delete<T>(int id) where T : BaseEntity, new()
         {
             try
@@ -95,7 +102,7 @@ namespace testSrorage.Application
             }
         }
 
-        // Document operations (оставлены без изменений)
+        // Добавляет документ (приход или расход), обновляя остатки продукта.
         public OperationResult AddDocument<TDocument>(string productName, int quantity, DateTime date)
             where TDocument : BaseEntity, IStorageDocument, new()
         {
@@ -163,6 +170,7 @@ namespace testSrorage.Application
             }
         }
 
+        // Обновляет документ и корректирует связанные остатки продуктов.
         public OperationResult UpdateDocument<TDocument>(TDocument document)
             where TDocument : BaseEntity, IStorageDocument, new()
         {
@@ -255,6 +263,7 @@ namespace testSrorage.Application
             }
         }
 
+        // Возвращает документы заданного типа в диапазоне дат.
         public List<TDocument> GetDocumentsByDateRange<TDocument>(DateTime startDate, DateTime endDate)
             where TDocument : BaseEntity, IStorageDocument, new()
         {
@@ -267,6 +276,7 @@ namespace testSrorage.Application
                 .ToList();
         }
 
+        // Создаёт суммарную сводку по документам (сумма quantity и количество записей).
         public ReportSummary CreateSummary<TDocument>(IEnumerable<TDocument> documents)
             where TDocument : IStorageDocument
         {
@@ -277,8 +287,7 @@ namespace testSrorage.Application
             return new ReportSummary(items.Sum(d => d.Quantity), items.Count);
         }
 
-        // CountProductDocuments и DeleteProduct оставлены как вспомогательные (Delete<T> вызывает DeleteProduct для Product)
-        // Исправление для CS0311: используйте тип t вместо object при вызове методов через reflection
+        // Подсчитывает количество документов, связанных с продуктом (всех типов документов).
         public int CountProductDocuments(int productId)
         {
             try
@@ -318,6 +327,7 @@ namespace testSrorage.Application
             }
         }
 
+        // Удаляет продукт и все связанные с ним документ-строки.
         public OperationResult DeleteProduct(Product product)
         {
             try
@@ -367,7 +377,7 @@ namespace testSrorage.Application
             }
         }
 
-        // Helper
+        // Вспомогательный метод поиска продукта по имени (без учёта регистра).
         private Product FindProductByName(IRepository<Product> repo, string productName)
         {
             string normalized = productName.Trim();

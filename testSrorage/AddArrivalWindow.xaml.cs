@@ -6,16 +6,19 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Окно добавления прихода (создаёт запись Arrival и корректирует остатки).
     public partial class AddArrivalWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private bool isDataSaved;
 
+        // Конструктор — инициализация компонентов.
         public AddArrivalWindow()
         {
             InitializeComponent();
         }
 
+        // Обработчик кнопки применения: валидация и добавление прихода.
         private void aplyBtn_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(nameTxBx.Text))
@@ -54,6 +57,7 @@ namespace testSrorage
             Close();
         }
 
+        // Обработчик отмены: подтверждение закрытия без сохранения.
         private void canсelBtn_Click(object sender, RoutedEventArgs e)
         {
             if (!isDataSaved)

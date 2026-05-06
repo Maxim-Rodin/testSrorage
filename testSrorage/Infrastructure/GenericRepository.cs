@@ -9,6 +9,7 @@ using testSrorage.Domain;
 
 namespace testSrorage.Infrastructure
 {
+    // Универсальный репозиторий, реализующий CRUD для сущности T через MySQL.
     public sealed class GenericRepository<T> : IRepository<T>
         where T : BaseEntity, new()
     {
@@ -17,6 +18,7 @@ namespace testSrorage.Infrastructure
         private readonly List<PropertyInfo> mappedProperties;
         private readonly List<PropertyInfo> dataProperties;
 
+        // Конструктор — получает фабрику подключений и готовит метаданные сущности.
         public GenericRepository(DbConnectionFactory connectionFactory)
         {
             if (connectionFactory == null)
@@ -28,6 +30,7 @@ namespace testSrorage.Infrastructure
             dataProperties = EntityMetadata.GetDataProperties(typeof(T));
         }
 
+        // Возвращает все записи таблицы.
         public List<T> GetAll()
         {
             string sql = "SELECT " + BuildColumnList(mappedProperties) +
@@ -50,6 +53,7 @@ namespace testSrorage.Infrastructure
             return items;
         }
 
+        // Возвращает запись по Id.
         public T GetById(int id)
         {
             string sql = "SELECT " + BuildColumnList(mappedProperties) +
@@ -69,6 +73,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Вставляет запись и возвращает её новый Id.
         public int Insert(T entity)
         {
             if (entity == null)
@@ -91,6 +96,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Обновляет существующую запись.
         public bool Update(T entity)
         {
             if (entity == null)
@@ -115,6 +121,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Удаляет запись по Id.
         public bool Delete(int id)
         {
             string sql = "DELETE FROM " + EntityMetadata.EscapeIdentifier(tableName) +
@@ -130,11 +137,13 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Вспомогательный: строит список колонок для SELECT.
         private static string BuildColumnList(IEnumerable<PropertyInfo> properties)
         {
             return string.Join(", ", properties.Select(property => EntityMetadata.EscapeIdentifier(property.Name)));
         }
 
+        // Вспомогательный: добавляет параметры команды из свойств сущности.
         private static void AddParameters(MySqlCommand command, T entity, IEnumerable<PropertyInfo> properties)
         {
             foreach (PropertyInfo property in properties)
@@ -144,6 +153,7 @@ namespace testSrorage.Infrastructure
             }
         }
 
+        // Маппит строку результата в объект T.
         private T Map(IDataRecord record)
         {
             T entity = new T();

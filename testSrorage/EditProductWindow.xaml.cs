@@ -7,11 +7,13 @@ using testSrorage.Infrastructure;
 
 namespace testSrorage
 {
+    // Окно редактирования продукта.
     public partial class EditProductWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private readonly Product product;
 
+        // Конструктор — принимает выбранный продукт для редактирования.
         public EditProductWindow(Product selectedProduct)
         {
             InitializeComponent();
@@ -19,6 +21,7 @@ namespace testSrorage
             LoadProductData();
         }
 
+        // Загружает данные продукта в поля формы.
         private void LoadProductData()
         {
             txtProductId.Text = product.Id.ToString();
@@ -26,6 +29,7 @@ namespace testSrorage
             txtProductQuantity.Text = product.Quantity.ToString();
         }
 
+        // Обработчик кнопки сохранения — валидирует и обновляет продукт через сервис.
         private void btnSaveProduct_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtProductName.Text))
@@ -56,6 +60,7 @@ namespace testSrorage
             Close();
         }
 
+        // Обработчик кнопки отмены — закрывает окно без сохранения.
         private void btnCancelProduct_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;

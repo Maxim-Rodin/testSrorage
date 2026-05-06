@@ -2,6 +2,7 @@ using System;
 
 namespace testSrorage.Domain.Attributes
 {
+    // Атрибут для указания имени таблицы в БД для сущности.
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class TableAttribute : Attribute
     {

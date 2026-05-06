@@ -3,6 +3,7 @@ using testSrorage.Domain.Attributes;
 
 namespace testSrorage.Domain
 {
+    // —ущность прихода Ч документ, увеличивающий остаток (IIncomingDocument).
     [Table("arrivals")]
     public class Arrival : BaseEntity, IStorageDocument, IIncomingDocument
     {

@@ -8,11 +8,13 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Окно формирования отчёта по приходам.
     public partial class IncomeReportWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private List<Arrival> currentReport = new List<Arrival>();
 
+        // Конструктор окна — инициализация компонентов и дат.
         public IncomeReportWindow()
         {
             InitializeComponent();
@@ -22,6 +24,7 @@ namespace testSrorage
             dpEndDate.SelectedDateFormat = DatePickerFormat.Long;
         }
 
+        // Обработчик кнопки: генерация отчёта по выбранному диапазону дат.
         private void btnGenerateReport_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -61,6 +64,7 @@ namespace testSrorage
             }
         }
 
+        // Обновляет блок с суммарной информацией по отчёту.
         private void UpdateSummary(ReportSummary summary)
         {
             string startDateStr = dpStartDate.SelectedDate.HasValue

@@ -10,26 +10,33 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Главное окно приложения.
+    // Содержит обработчики кнопок, логику загрузки данных в `datagrid`
+    // и открытия/обновления окон добавления/редактирования/отчётов.
     public partial class MainWindow : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private Type currentViewType;
 
+        // Конструктор окна. Инициализирует компоненты интерфейса.
         public MainWindow()
         {
             InitializeComponent();
         }
 
+        // Обработчик кнопки проверки подключения к БД. Показывает результат проверки.
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ShowResult(storageService.CheckConnection());
         }
 
+        // Обработчик кнопки загрузки списка товаров.
         private void checkBtn1_Click(object sender, RoutedEventArgs e)
         {
             LoadProducts();
         }
 
+        // Обработчик кнопки открытия окна добавления прихода.
         private void arrivalBtn_Click(object sender, RoutedEventArgs e)
         {
             AddArrivalWindow addArrivalWindow = new AddArrivalWindow();
@@ -37,16 +44,19 @@ namespace testSrorage
             RefreshCurrentView();
         }
 
+        // Обработчик кнопки загрузки приходов.
         private void checkArriveBtn_Click(object sender, RoutedEventArgs e)
         {
             LoadArrivals();
         }
 
+        // Обработчик кнопки загрузки расходов.
         private void checkExpensesBtn_Click(object sender, RoutedEventArgs e)
         {
             LoadExpenses();
         }
 
+        // Обработчик кнопки открытия окна добавления расхода.
         private void addExpenesBtn_Click(object sender, RoutedEventArgs e)
         {
             AddExpensesWindow addExpensesWindow = new AddExpensesWindow();
@@ -54,6 +64,8 @@ namespace testSrorage
             RefreshCurrentView();
         }
 
+        // Обработчик кнопки удаления выбранного элемента из таблицы.
+        // Получает Id выбранного объекта и вызывает универсальный метод Delete сервиса.
         private void deletBtn_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -95,6 +107,8 @@ namespace testSrorage
             }
         }
 
+        // Обработчик кнопки изменения выбранного элемента.
+        // Открывает соответствующее окно редактирования для выбранного объекта.
         private void changeBtn_Click(object sender, RoutedEventArgs e)
         {
             if (datagrid.SelectedItem == null)
@@ -107,33 +121,40 @@ namespace testSrorage
             OpenEditWindowForItem(selected);
         }
 
+        // Обработчик кнопки открытия окна отчёта по приходам.
         private void arriveDataBtn_Click(object sender, RoutedEventArgs e)
         {
             IncomeReportWindow incomeReportWindow = new IncomeReportWindow();
             incomeReportWindow.ShowDialog();
         }
 
+        // Обработчик кнопки открытия окна отчёта по расходам.
         private void expensesDataBtn_Click(object sender, RoutedEventArgs e)
         {
             ExpensesReportWindiw expensesReportWindiw = new ExpensesReportWindiw();
             expensesReportWindiw.ShowDialog();
         }
 
+        // Вспомогательный метод загрузки списка товаров.
         private void LoadProducts()
         {
             LoadGridByType(typeof(Product));
         }
 
+        // Вспомогательный метод загрузки списка приходов.
         private void LoadArrivals()
         {
             LoadGridByType(typeof(Arrival));
         }
 
+        // Вспомогательный метод загрузки списка расходов.
         private void LoadExpenses()
         {
             LoadGridByType(typeof(Expense));
         }
 
+        // Универсальный метод загрузки данных для заданного типа.
+        // Использует рефлексию для вызова `IStorageService.GetAll<T>()` и заполняет `datagrid`.
         private void LoadGridByType(Type type)
         {
             try
@@ -158,12 +179,16 @@ namespace testSrorage
             }
         }
 
+        // Обновляет текущий вид (повторно загружает данные для текущего типа).
         private void RefreshCurrentView()
         {
             if (currentViewType != null)
                 LoadGridByType(currentViewType);
         }
 
+        // Открывает окно редактирования для переданного объекта.
+        // Ищет тип окна `Edit{TypeName}Window`, пытается найти подходящий конструктор
+        // или установить `DataContext`, вызывает `ShowDialog` и при успехе обновляет вид.
         private void OpenEditWindowForItem(object item)
         {
             Type itemType = item.GetType();
@@ -222,6 +247,7 @@ namespace testSrorage
                 RefreshCurrentView();
         }
 
+        // Вспомогательный обобщённый метод загрузки данных в датагрид с обработкой исключений.
         private void LoadGrid<T>(Func<List<T>> loadData)
         {
             try
@@ -235,6 +261,7 @@ namespace testSrorage
             }
         }
 
+        // Вспомогательный метод отображения результата операции (сообщение пользователю).
         private static void ShowResult(OperationResult result)
         {
             MessageBox.Show(result.Message);

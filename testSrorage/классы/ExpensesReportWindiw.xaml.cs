@@ -7,11 +7,13 @@ using testSrorage.Domain;
 
 namespace testSrorage
 {
+    // Окно формирования отчёта по расходам.
     public partial class ExpensesReportWindiw : Window
     {
         private readonly IStorageService storageService = App.CurrentStorageService;
         private List<Expense> currentReport = new List<Expense>();
 
+        // Конструктор окна — инициализация компонентов и дат.
         public ExpensesReportWindiw()
         {
             InitializeComponent();
@@ -19,6 +21,7 @@ namespace testSrorage
             dpStartDate.SelectedDate = DateTime.Today.AddDays(-30);
         }
 
+        // Обработчик кнопки: генерация отчёта по расходам за выбранный период.
         private void btnGenerateReport_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -58,6 +61,7 @@ namespace testSrorage
             }
         }
 
+        // Обновляет отображение суммарной информации отчёта.
         private void UpdateSummary(ReportSummary summary)
         {
             string startDateStr = dpStartDate.SelectedDate.HasValue

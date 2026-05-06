@@ -7,6 +7,7 @@ using testSrorage.Domain;
 
 namespace testSrorage.Application.Interfaces
 {
+    // Фабрика репозиториев: абстракция для получения IRepository<T>.
     public interface IRepositoryFactory
     {
         IRepository<T> GetRepository<T>()
