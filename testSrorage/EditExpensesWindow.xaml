@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:testSrorage"
         mc:Ignorable="d"
-        Title="EditExpensesWindow" Height="300" Width="400">
+        Title="Редактирование расхода" Height="300" Width="400">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

@@ -1,28 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using testSrorage.классы.интерфейсы;
 
 namespace testSrorage.классы
 {
-    
     public partial class ExpensesReportWindiw : Window
     {
-        private DBManager manager = new DBManager();
+        private readonly IStorageService storageService = new StorageService();
         private List<Expenses> currentReport = new List<Expenses>();
+
         public ExpensesReportWindiw()
         {
             InitializeComponent();
-
             dpEndDate.SelectedDate = DateTime.Today;
             dpStartDate.SelectedDate = DateTime.Today.AddDays(-30);
         }
@@ -33,58 +23,50 @@ namespace testSrorage.классы
             {
                 if (dpStartDate.SelectedDate == null || dpEndDate.SelectedDate == null)
                 {
-                    MessageBox.Show("Выберите обе даты");
+                    MessageBox.Show("Выберите обе даты.");
                     return;
                 }
 
-                DateTime startDate = dpStartDate.SelectedDate.Value;
-                DateTime endDate = dpEndDate.SelectedDate.Value;
+                DateTime startDate = dpStartDate.SelectedDate.Value.Date;
+                DateTime endDate = dpEndDate.SelectedDate.Value.Date;
 
                 if (startDate > endDate)
                 {
-                    MessageBox.Show("Дата 'С' не может быть позже даты 'По'");
+                    MessageBox.Show("Дата 'С' не может быть позже даты 'По'.");
                     return;
                 }
 
-
-                currentReport = manager.GetExpensesByDateRange(startDate, endDate);
+                currentReport = storageService.GetExpensesByDateRange(startDate, endDate);
 
                 if (currentReport.Count == 0)
                 {
-                    MessageBox.Show("Нет данных за выбранный период");
+                    MessageBox.Show("Нет данных за выбранный период.");
                     dgReport.ItemsSource = null;
-                    UpdateSummary(0, 0);
+                    UpdateSummary(new ReportSummary(0, 0));
                     return;
                 }
 
-
                 dgReport.ItemsSource = currentReport;
-
-
-                int totalQuantity = currentReport.Sum(c => c.Quantity);
-                int recordCount = currentReport.Count;
-
-                UpdateSummary(totalQuantity, recordCount);
+                UpdateSummary(storageService.CreateSummary(currentReport));
             }
-
-
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show("Ошибка: " + ex.Message);
             }
-            
         }
 
-        private void UpdateSummary(int totalQuantity, int recordCount)
+        private void UpdateSummary(ReportSummary summary)
         {
-            DateTime? startDate = dpStartDate.SelectedDate;
-            DateTime? endDate = dpEndDate.SelectedDate;
+            string startDateStr = dpStartDate.SelectedDate.HasValue
+                ? dpStartDate.SelectedDate.Value.ToString("dd.MM.yyyy")
+                : string.Empty;
+            string endDateStr = dpEndDate.SelectedDate.HasValue
+                ? dpEndDate.SelectedDate.Value.ToString("dd.MM.yyyy")
+                : string.Empty;
 
-            txtSummary.Text = $"Период: {startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}";
-            txtTotalQuantity.Text = $"Общее количество: {totalQuantity}";
-            txtTotalCount.Text = $"Записей: {recordCount}";
+            txtSummary.Text = "Период: " + startDateStr + " - " + endDateStr;
+            txtTotalQuantity.Text = "Общее количество: " + summary.TotalQuantity;
+            txtTotalCount.Text = "Записей: " + summary.RecordCount;
         }
-
     }
 }
-

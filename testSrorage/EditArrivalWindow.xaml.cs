@@ -1,27 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using testSrorage.классы;
+using testSrorage.классы.интерфейсы;
 
 namespace testSrorage
 {
-    /// <summary>
-    /// Логика взаимодействия для EditArrivalWindow.xaml
-    /// </summary>
     public partial class EditArrivalWindow : Window
     {
-        private Arrivals arrival;
-        private DBManager manager = new DBManager();
+        private readonly IStorageService storageService = new StorageService();
+        private readonly Arrivals arrival;
 
         public EditArrivalWindow(Arrivals selectedArrival)
         {
@@ -36,54 +24,46 @@ namespace testSrorage
             dpArrivalDate.SelectedDate = arrival.DateTime;
             txtArrivalQuantity.Text = arrival.Quantity.ToString();
 
-           
-            var products = manager.GetAllProducts();
+            var products = storageService.GetProducts();
             cmbArrivalProducts.ItemsSource = products;
 
-            
-            var currentProduct = products.FirstOrDefault(p => p.IdProduct == arrival.ProductId);
+            Products currentProduct = products.FirstOrDefault(p => p.IdProduct == arrival.ProductId);
             if (currentProduct != null)
                 cmbArrivalProducts.SelectedItem = currentProduct;
         }
 
         private void btnSaveArrival_Click(object sender, RoutedEventArgs e)
         {
-            try
+            if (cmbArrivalProducts.SelectedItem == null)
             {
-                if (cmbArrivalProducts.SelectedItem == null)
-                {
-                    MessageBox.Show("Выберите продукт");
-                    return;
-                }
-
-                if (dpArrivalDate.SelectedDate == null)
-                {
-                    MessageBox.Show("Выберите дату");
-                    return;
-                }
-
-                if (!int.TryParse(txtArrivalQuantity.Text, out int quantity) || quantity <= 0)
-                {
-                    MessageBox.Show("Введите корректное количество");
-                    return;
-                }
-
-                
-                arrival.DateTime = dpArrivalDate.SelectedDate.Value;
-                arrival.Quantity = quantity;
-                arrival.ProductId = ((Products)cmbArrivalProducts.SelectedItem).IdProduct;
-
-                if (manager.UpdateArrival(arrival))
-                {
-                    MessageBox.Show("Приход обновлен");
-                    DialogResult = true;
-                    Close();
-                }
+                MessageBox.Show("Выберите продукт.");
+                return;
             }
-            catch (Exception ex)
+
+            if (dpArrivalDate.SelectedDate == null)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show("Выберите дату.");
+                return;
             }
+
+            if (!int.TryParse(txtArrivalQuantity.Text, out int quantity) || quantity <= 0)
+            {
+                MessageBox.Show("Введите корректное количество.");
+                return;
+            }
+
+            arrival.DateTime = dpArrivalDate.SelectedDate.Value.Date;
+            arrival.Quantity = quantity;
+            arrival.ProductId = ((Products)cmbArrivalProducts.SelectedItem).IdProduct;
+
+            OperationResult result = storageService.UpdateArrival(arrival);
+            MessageBox.Show(result.Message);
+
+            if (!result.Success)
+                return;
+
+            DialogResult = true;
+            Close();
         }
 
         private void btnCancelArrival_Click(object sender, RoutedEventArgs e)
@@ -93,4 +73,3 @@ namespace testSrorage
         }
     }
 }
-

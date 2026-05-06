@@ -1,181 +1,205 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Markup;
 using testSrorage.классы;
 using testSrorage.классы.интерфейсы;
 
 namespace testSrorage
 {
-    internal class DBManager
+    internal class DBManager : IStorageRepository
     {
-        private DB connect = new DB();
-        public int LastInsertedId { get; set; }
+        private readonly DB connect;
 
-        #region Методы для продуктов
-
-        public List<Products> GetAllProducts() // получения списка из всех продуктов
+        public DBManager()
+            : this(new DB())
         {
+        }
+
+        public DBManager(DB connect)
+        {
+            if (connect == null)
+                throw new ArgumentNullException(nameof(connect));
+
+            this.connect = connect;
+        }
+
+        public int LastInsertedId { get; private set; }
+
+        public List<Products> GetAllProducts()
+        {
+            const string query = @"
+                SELECT idProducts, nameProduct, quantity
+                FROM products
+                ORDER BY nameProduct";
+
             List<Products> products = new List<Products>();
-            string query = "SELECT * FROM products";
+            connect.OpenConnection();
 
             try
             {
-                connect.OpenConnection();
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 using (MySqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
-                    {
-                        Products product = new Products
-                        {
-                            IdProduct = reader.GetInt32("idProducts"),
-                            Name = reader.GetString("nameProduct"),
-                            Quantity = reader.GetInt32("quantity")
-                        };
-                        products.Add(product);
-                    }
+                        products.Add(ReadProduct(reader));
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении продуктов: {ex.Message}");
+
+                return products;
             }
             finally
             {
                 connect.CloseConnection();
             }
-
-            return products;
         }
-        public bool UpdateProduct(Products product)
-        {
-            try
-            {
-                connect.OpenConnection();
 
-                string query = @"
-                UPDATE products 
-                SET nameProduct = @name, 
-                    quantity = @quantity 
+        public Products GetProductById(int id)
+        {
+            const string query = @"
+                SELECT idProducts, nameProduct, quantity
+                FROM products
                 WHERE idProducts = @id";
 
+            connect.OpenConnection();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        return reader.Read() ? ReadProduct(reader) : null;
+                    }
+                }
+            }
+            finally
+            {
+                connect.CloseConnection();
+            }
+        }
+
+        public Products GetProductByName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            const string query = @"
+                SELECT idProducts, nameProduct, quantity
+                FROM products
+                WHERE LOWER(nameProduct) = LOWER(@name)
+                LIMIT 1";
+
+            connect.OpenConnection();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@name", name.Trim());
+
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        return reader.Read() ? ReadProduct(reader) : null;
+                    }
+                }
+            }
+            finally
+            {
+                connect.CloseConnection();
+            }
+        }
+
+        public bool AddNewProductWithQuantity(string productName, int quantity)
+        {
+            const string query = @"
+                INSERT INTO products (nameProduct, quantity)
+                VALUES (@name, @quantity);
+                SELECT LAST_INSERT_ID();";
+
+            connect.OpenConnection();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@name", productName.Trim());
+                    command.Parameters.AddWithValue("@quantity", quantity);
+
+                    object result = command.ExecuteScalar();
+                    LastInsertedId = result == null || result == DBNull.Value ? 0 : Convert.ToInt32(result);
+                    return LastInsertedId > 0;
+                }
+            }
+            finally
+            {
+                connect.CloseConnection();
+            }
+        }
+
+        public bool UpdateProduct(Products product)
+        {
+            const string query = @"
+                UPDATE products
+                SET nameProduct = @name,
+                    quantity = @quantity
+                WHERE idProducts = @id";
+
+            connect.OpenConnection();
+
+            try
+            {
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", product.IdProduct);
-                    command.Parameters.AddWithValue("@name", product.Name);
+                    command.Parameters.AddWithValue("@name", product.Name.Trim());
                     command.Parameters.AddWithValue("@quantity", product.Quantity);
-
                     return command.ExecuteNonQuery() > 0;
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при обновлении продукта: {ex.Message}");
-                return false;
-            }
             finally
             {
                 connect.CloseConnection();
             }
         }
-        public Products GetProductById(int id) // метод для нахождения продукта по id
+
+        public void UpdateProductQuantity(int id, int quantity, bool isAddition)
         {
+            string query = isAddition
+                ? "UPDATE products SET quantity = quantity + @quantity WHERE idProducts = @id"
+                : "UPDATE products SET quantity = quantity - @quantity WHERE idProducts = @id AND quantity >= @quantity";
+
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-                string query = "SELECT * FROM products WHERE idProducts = @id";
-
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", id);
-
-                    using (MySqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return new Products
-                            {
-                                IdProduct = reader.GetInt32("idProducts"),
-                                Name = reader.GetString("nameProduct"),
-                                Quantity = reader.GetInt32("quantity")
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при поиске продукта по ID: {ex.Message}");
-            }
-            finally
-            {
-                connect.CloseConnection();
-            }
-
-            return null;
-        }
-        public bool AddNewProductWithQuantity(string productName, int quantity) // добавление нового продукта
-        {
-            try
-            {
-                connect.OpenConnection();
-
-
-                string query = "INSERT INTO products (nameProduct, quantity) VALUES (@name, @quantity); SELECT LAST_INSERT_ID();";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@name", productName);
                     command.Parameters.AddWithValue("@quantity", quantity);
 
-                    object result = command.ExecuteScalar();
-
-                    if (result != null && result != DBNull.Value)
-                    {
-                        LastInsertedId = Convert.ToInt32(result);
-                        return true;
-                    }
-                    return false;
+                    if (command.ExecuteNonQuery() == 0)
+                        throw new InvalidOperationException("Не удалось обновить количество продукта.");
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при создании продукта: {ex.Message}");
-                return false;
             }
             finally
             {
                 connect.CloseConnection();
             }
         }
-        public int GetMaxProductId() // получение id для нового продукта
+
+        public int GetMaxProductId()
         {
+            const string query = "SELECT COALESCE(MAX(idProducts), 0) FROM products";
+
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-                string query = "SELECT MAX(idProducts) FROM products";
-
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
-                    object result = command.ExecuteScalar();
-
-                    if (result != null && result != DBNull.Value)
-                    {
-                        return Convert.ToInt32(result);
-                    }
-                    return 0;
+                    return Convert.ToInt32(command.ExecuteScalar());
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении максимального ID: {ex.Message}");
-                return 0;
             }
             finally
             {
@@ -183,469 +207,216 @@ namespace testSrorage
             }
         }
 
-        public void UpdateProductQuantity(int id, int quantity, bool isAddition) // обновление колличества продуктов на складе 
-        {
-            try
-            {
-                connect.OpenConnection();
-                string operation = isAddition ? "+" : "-";
-                string query = $"UPDATE products SET quantity = quantity {operation} @quantity WHERE idProducts = @id";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@quantity", quantity);
-                    command.Parameters.AddWithValue("@id", id);
-                    command.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при обновлении количества: {ex.Message}");
-                throw;
-            }
-            finally
-            {
-                connect.CloseConnection();
-            }
-        }
-        public Products GetProductByName(string name) // нахождение продукта по имени
-        {
-            try
-            {
-                connect.OpenConnection();
-                string trimmedName = name.Trim();
-                string query = "SELECT * FROM products WHERE LOWER(nameProduct) = LOWER(@name)";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@name", trimmedName);
-
-                    using (MySqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return new Products
-                            {
-                                IdProduct = reader.GetInt32("idProducts"),
-                                Name = reader.GetString("nameProduct"),
-                                Quantity = reader.GetInt32("quantity")
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при поиске продукта: {ex.Message}");
-            }
-            finally
-            {
-                connect.CloseConnection();
-            }
-
-            return null;
-        }
-
-
-        #endregion
-
-
-        #region Методы для приходов
         public List<Arrivals> GetAllArrivals()
         {
+            const string query = @"
+                SELECT idArrivals, date, productId, quantity
+                FROM arrivals
+                ORDER BY date DESC";
+
             List<Arrivals> arrivals = new List<Arrivals>();
-            string query = "SELECT * FROM arrivals";
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
-                    using (MySqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            Arrivals arrival = new Arrivals
-                            {
-                                IdArrivals = reader.GetInt32("idArrivals"),
-                                ProductId = reader.GetInt32("productId"),
-                                DateTime = reader.GetDateTime("date").Date,
-                                Quantity = reader.GetInt32("quantity")
+                    while (reader.Read())
+                        arrivals.Add(ReadArrival(reader));
+                }
 
-
-
-                            };
-                            arrivals.Add(arrival);
-                        }
-                    }
-                };
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении приходов: {ex.Message}");
+                return arrivals;
             }
             finally
             {
                 connect.CloseConnection();
             }
-
-            return arrivals;
         }
-        public bool UpdateArrival(Arrivals arrival)
+
+        public bool AddArrivals(Arrivals arrivals)
         {
+            const string query = @"
+                INSERT INTO arrivals (date, productId, quantity)
+                VALUES (@date, @productId, @quantity)";
+
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@date", arrivals.DateTime);
+                    command.Parameters.AddWithValue("@productId", arrivals.ProductId);
+                    command.Parameters.AddWithValue("@quantity", arrivals.Quantity);
+                    return command.ExecuteNonQuery() > 0;
+                }
+            }
+            finally
+            {
+                connect.CloseConnection();
+            }
+        }
 
-                string query = @"
-                UPDATE arrivals 
-                SET date = @date, 
-                    productId = @productId, 
-                    quantiti = @quantity 
+        public bool UpdateArrival(Arrivals arrival)
+        {
+            const string query = @"
+                UPDATE arrivals
+                SET date = @date,
+                    productId = @productId,
+                    quantity = @quantity
                 WHERE idArrivals = @id";
 
+            connect.OpenConnection();
+
+            try
+            {
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", arrival.IdArrivals);
                     command.Parameters.AddWithValue("@date", arrival.DateTime);
                     command.Parameters.AddWithValue("@productId", arrival.ProductId);
                     command.Parameters.AddWithValue("@quantity", arrival.Quantity);
-
                     return command.ExecuteNonQuery() > 0;
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при обновлении прихода: {ex.Message}");
-                return false;
-            }
             finally
             {
                 connect.CloseConnection();
             }
         }
-        public bool AddArrivals(Arrivals arrivals) // метод для добавления прихода
-        {
-            try
-            {
-                connect.OpenConnection();
 
-
-                int nextArrivalId = GetNextArrivalId();
-
-
-                string query = @"INSERT INTO arrivals (idArrivals, date, productId, quantity) 
-                         VALUES (@id, @date, @productId, @quantity)";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@id", nextArrivalId);
-                    command.Parameters.AddWithValue("@date", arrivals.DateTime);
-                    command.Parameters.AddWithValue("@productId", arrivals.ProductId);
-                    command.Parameters.AddWithValue("@quantity", arrivals.Quantity);
-
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows > 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при добавлении прихода: {ex.Message}");
-                return false;
-            }
-            finally
-            {
-                connect.CloseConnection();
-            }
-        }
-        private bool IsArrivalIdExists(int id) // проверяем найден ли приход по айди
-        {
-            string query = "SELECT 1 FROM arrivals WHERE idArrivals = @id LIMIT 1";
-
-            using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-            {
-                command.Parameters.AddWithValue("@id", id);
-                object result = command.ExecuteScalar();
-                return result != null;
-            }
-        }
-        private int GetNextArrivalId() // получение id
-        {
-            try
-            {
-                string query = "SELECT COALESCE(MAX(idArrivals), 0) FROM arrivals";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    object result = command.ExecuteScalar();
-                    int maxId = Convert.ToInt32(result);
-
-
-                    int nextId = maxId + 1;
-                    while (IsArrivalIdExists(nextId))
-                    {
-                        nextId++;
-                    }
-
-                    return nextId;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении ID прихода: {ex.Message}");
-                return 1;
-            }
-        }
-        #endregion
-
-
-        #region Методы для расходов
         public List<Expenses> GetAllExpenses()
         {
-            List<Expenses> expenseses = new List<Expenses>();
-            string query = "SELECT * FROM expenses";
+            const string query = @"
+                SELECT idExpenses, dateExpenses, productId, quantity
+                FROM expenses
+                ORDER BY dateExpenses DESC";
+
+            List<Expenses> expenses = new List<Expenses>();
+            connect.OpenConnection();
 
             try
             {
-               connect.OpenConnection();
-               
-                using (MySqlCommand command = new MySqlCommand(query,connect.GetConnection()))
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
-                    using (MySqlDataReader reader = command.ExecuteReader()) {
-                        
-                       while (reader.Read())
-                        {
-
-                            Expenses expenses = new Expenses
-                            {
-                                IdExpenses = reader.GetInt32("idExpenses"),
-                                ProductId =reader.GetInt32("ProductID"),
-                                DateTime = reader.GetDateTime("dateExpenses").Date,
-                                Quantity = reader.GetInt32("quantityEx")
-                                
-                            };
-                            expenseses.Add(expenses);
-                        }
-                    
-                    
-                    }
-
-
+                    while (reader.Read())
+                        expenses.Add(ReadExpense(reader));
                 }
 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении расходов: {ex.Message}");
+                return expenses;
             }
             finally
             {
                 connect.CloseConnection();
             }
-
-            return expenseses;
-
         }
-        public bool UpdateExpense(Expenses expense)
+
+        public bool AddExpenses(Expenses expenses)
         {
+            const string query = @"
+                INSERT INTO expenses (dateExpenses, productId, quantity)
+                VALUES (@date, @productId, @quantity)";
+
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@date", expenses.DateTime);
+                    command.Parameters.AddWithValue("@productId", expenses.ProductId);
+                    command.Parameters.AddWithValue("@quantity", expenses.Quantity);
+                    return command.ExecuteNonQuery() > 0;
+                }
+            }
+            finally
+            {
+                connect.CloseConnection();
+            }
+        }
 
-                string query = @"
-                UPDATE expenses 
-                SET dateExpenses = @date, 
-                    ProductID = @productId, 
-                    quantityEx = @quantity 
+        public bool UpdateExpense(Expenses expense)
+        {
+            const string query = @"
+                UPDATE expenses
+                SET dateExpenses = @date,
+                    productId = @productId,
+                    quantity = @quantity
                 WHERE idExpenses = @id";
 
+            connect.OpenConnection();
+
+            try
+            {
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
                     command.Parameters.AddWithValue("@id", expense.IdExpenses);
                     command.Parameters.AddWithValue("@date", expense.DateTime);
                     command.Parameters.AddWithValue("@productId", expense.ProductId);
                     command.Parameters.AddWithValue("@quantity", expense.Quantity);
-
                     return command.ExecuteNonQuery() > 0;
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                MessageBox.Show($"Ошибка при обновлении расхода: {ex.Message}");
-                return false;
+                connect.CloseConnection();
+            }
+        }
+
+        public int CountProductDocuments(int productId)
+        {
+            const string query = @"
+                SELECT
+                    (SELECT COUNT(*) FROM arrivals WHERE productId = @id) +
+                    (SELECT COUNT(*) FROM expenses WHERE productId = @id)";
+
+            connect.OpenConnection();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@id", productId);
+                    return Convert.ToInt32(command.ExecuteScalar());
+                }
             }
             finally
             {
                 connect.CloseConnection();
             }
         }
-        private bool IsEpenesIdExists(int id) // проверяем найден ли расход по айди
-        {
-            string query = "SELECT 1 FROM expenses WHERE IdExpenses = @id LIMIT 1";
 
-            using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-            {
-                command.Parameters.AddWithValue("@id", id);
-                object result = command.ExecuteScalar();
-                return result != null;
-            }
-        }
-
-        public int GetNextExpenses ()
-        {
-            try
-            {
-                string query = "SELECT COALESCE(MAX(IdExpenses), 0) FROM expenses";
-                using (MySqlCommand command = new MySqlCommand(query ,connect.GetConnection()))
-                {
-                    object result = command.ExecuteScalar();
-                    int maxId = Convert.ToInt32(result);
-
-
-                    int nextId = maxId + 1;
-                    while (IsEpenesIdExists(nextId))
-                    {
-                        nextId++;
-                    }
-
-                    return nextId;
-                }
-            }
-            catch (Exception ex)
-            {
-
-                MessageBox.Show($"Ошибка при получении ID расход: {ex.Message}");
-                return 1;
-            }
-            
-        }
-        public bool AddExpenses (Expenses expenses)
-        {
-            try
-            {
-                connect.OpenConnection();
-
-                int nextExpensesId = GetNextExpenses();
-                string query = @"INSERT INTO expenses (idExpenses, dateExpenses, ProductID, quantity) 
-                         VALUES (@id, @date, @productId, @quantity)";
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@id", nextExpensesId);
-                    command.Parameters.AddWithValue("@date", expenses.DateTime);
-                    command.Parameters.AddWithValue("@productId",expenses.ProductId);
-                    command.Parameters.AddWithValue("@quantity", expenses.Quantity);
-
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows > 0;
-                }
-
-
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при добавлении расхода: {ex.Message}");
-                return false;
-            }
-            finally { connect.CloseConnection(); }
-        }
-        #endregion
-
-        #region Методы удаления
         public bool DeleteProduct(Products product)
         {
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-
-                
-                string query = @"SELECT COUNT(*) FROM arrivals WHERE productId = @id  
-                         UNION ALL    
-                         SELECT COUNT(*) FROM expenses WHERE ProductID = @id";
-
-                int totalReload = 0;
-                using (MySqlCommand commandCheck = new MySqlCommand(query, connect.GetConnection()))
+                using (MySqlTransaction transaction = connect.GetConnection().BeginTransaction())
                 {
-                    commandCheck.Parameters.AddWithValue("@id", product.IdProduct); 
+                    ExecuteDelete("DELETE FROM arrivals WHERE productId = @id", product.IdProduct, transaction);
+                    ExecuteDelete("DELETE FROM expenses WHERE productId = @id", product.IdProduct, transaction);
+                    int deleted = ExecuteDelete("DELETE FROM products WHERE idProducts = @id", product.IdProduct, transaction);
 
-                    using (MySqlDataReader reader = commandCheck.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            totalReload += reader.GetInt32(0);
-                        }
-                    }
-
-                    
-                    if (totalReload > 0)
-                    {
-                        MessageBoxResult result = MessageBox.Show(
-                            $"У продукта есть {totalReload} связанных записей (приходы/расходы).\n" +
-                            "Удалить продукт и все связанные записи?",
-                            "Подтверждение удаления",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
-
-                        if (result != MessageBoxResult.Yes)
-                        {
-                            return false; 
-                        }
-
-                       
-                        string deleteRelatedQuery = @"
-                    DELETE FROM arrivals WHERE productId = @id;
-                    DELETE FROM expenses WHERE ProductID = @id;";
-
-                        using (MySqlCommand commandDelete = new MySqlCommand(deleteRelatedQuery, connect.GetConnection()))
-                        {
-                            commandDelete.Parameters.AddWithValue("@id", product.IdProduct);
-                            commandDelete.ExecuteNonQuery();
-                        }
-                    }
-
-                    
-                    string deleteProductQuery = "DELETE FROM products WHERE idProducts = @id";
-                    using (MySqlCommand command = new MySqlCommand(deleteProductQuery, connect.GetConnection()))
-                    {
-                        command.Parameters.AddWithValue("@id", product.IdProduct);
-                        int affectedRows = command.ExecuteNonQuery();
-                        MessageBox.Show($"Удален {product.Name}");
-                        return affectedRows > 0;
-                        
-                    }
+                    transaction.Commit();
+                    return deleted > 0;
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка удаления  {ex.Message}");
-                return false;
             }
             finally
             {
                 connect.CloseConnection();
             }
         }
+
         public bool DeleteArrival(int arrivalId)
         {
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-
-                string query = @"
-                DELETE FROM arrivals 
-                WHERE idArrivals = @id";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@id", arrivalId);
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows > 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при удалении прихода: {ex.Message}");
-                return false;
+                return ExecuteDelete("DELETE FROM arrivals WHERE idArrivals = @id", arrivalId, null) > 0;
             }
             finally
             {
@@ -655,158 +426,124 @@ namespace testSrorage
 
         public bool DeleteExpense(int expenseId)
         {
+            connect.OpenConnection();
+
             try
             {
-                connect.OpenConnection();
-
-                string query = @"
-                DELETE FROM expenses 
-                WHERE idExpenses = @id";
-
-                using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@id", expenseId);
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows > 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при удалении расхода: {ex.Message}");
-                return false;
+                return ExecuteDelete("DELETE FROM expenses WHERE idExpenses = @id", expenseId, null) > 0;
             }
             finally
             {
                 connect.CloseConnection();
             }
         }
-
-        #endregion
-
-
-        #region Методы для отчетов
 
         public List<Arrivals> GetArrivalsByDateRange(DateTime startDate, DateTime endDate)
         {
-            List<Arrivals> arrivals = new List<Arrivals>();
+            const string query = @"
+                SELECT idArrivals, date, productId, quantity
+                FROM arrivals
+                WHERE date >= @startDate AND date < @endDate
+                ORDER BY date DESC";
 
-            
-            
-         
-            string query = @"
-                            SELECT 
-                                a.idArrivals,
-                                a.date,
-                                a.productId,
-                                a.quantity,
-                                DATE(a.date) as DateOnly
-                            FROM arrivals a
-                            WHERE DATE(a.date) >= DATE(@startDate) 
-                              AND DATE(a.date) <= DATE(@endDate)
-                            ORDER BY a.date DESC";
+            List<Arrivals> arrivals = new List<Arrivals>();
+            connect.OpenConnection();
 
             try
             {
-                connect.OpenConnection();
-
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
-                   
-                    command.Parameters.AddWithValue("@startDate", startDate.ToString("yyyy-MM-dd"));
-                    command.Parameters.AddWithValue("@endDate", endDate.ToString("yyyy-MM-dd"));
-
-                   
-                   
+                    command.Parameters.AddWithValue("@startDate", startDate.Date);
+                    command.Parameters.AddWithValue("@endDate", endDate.Date.AddDays(1));
 
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
-                        int count = 0;
                         while (reader.Read())
-                        {
-                            count++;
-                            arrivals.Add(new Arrivals
-                            {
-                                IdArrivals = reader.GetInt32("idArrivals"),
-                                DateTime = reader.GetDateTime("date"),
-                                ProductId = reader.GetInt32("productId"),
-                                Quantity = reader.GetInt32("quantity")
-                            });
-                        }
-                        MessageBox.Show($"Найдено записей: {count}");
+                            arrivals.Add(ReadArrival(reader));
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении приходов: {ex.Message}\n\nЗапрос: {query}");
+
+                return arrivals;
             }
             finally
             {
                 connect.CloseConnection();
             }
-
-            return arrivals;
         }
+
         public List<Expenses> GetExpensesByDateRange(DateTime startDate, DateTime endDate)
         {
-            List<Expenses> expenses = new List<Expenses>();
+            const string query = @"
+                SELECT idExpenses, dateExpenses, productId, quantity
+                FROM expenses
+                WHERE dateExpenses >= @startDate AND dateExpenses < @endDate
+                ORDER BY dateExpenses DESC";
 
-            string query = @"
-            SELECT e.*, p.nameProduct 
-            FROM expenses e
-            LEFT JOIN products p ON e.ProductID = p.idProducts
-            WHERE e.dateExpenses BETWEEN @startDate AND @endDate 
-            ORDER BY e.dateExpenses DESC";
+            List<Expenses> expenses = new List<Expenses>();
+            connect.OpenConnection();
 
             try
             {
-                connect.OpenConnection();
-
                 using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
                 {
-                    command.Parameters.AddWithValue("@startDate", startDate);
-                    command.Parameters.AddWithValue("@endDate", endDate.AddDays(1).AddSeconds(-1));
+                    command.Parameters.AddWithValue("@startDate", startDate.Date);
+                    command.Parameters.AddWithValue("@endDate", endDate.Date.AddDays(1));
 
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
-                        {
-                            expenses.Add(new Expenses
-                            {
-                                IdExpenses = reader.GetInt32("idExpenses"),
-                                DateTime = reader.GetDateTime("dateExpenses"),
-                                ProductId = reader.GetInt32("ProductID"),
-                                Quantity = reader.GetInt32("quantityEx"),
-                                
-                            });
-                        }
+                            expenses.Add(ReadExpense(reader));
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при получении расходов: {ex.Message}");
+
+                return expenses;
             }
             finally
             {
                 connect.CloseConnection();
             }
-
-            return expenses;
         }
 
-        
+        private int ExecuteDelete(string query, int id, MySqlTransaction transaction)
+        {
+            using (MySqlCommand command = new MySqlCommand(query, connect.GetConnection()))
+            {
+                command.Transaction = transaction;
+                command.Parameters.AddWithValue("@id", id);
+                return command.ExecuteNonQuery();
+            }
+        }
 
-        #endregion
+        private static Products ReadProduct(MySqlDataReader reader)
+        {
+            return new Products
+            {
+                IdProduct = reader.GetInt32(reader.GetOrdinal("idProducts")),
+                Name = reader.GetString(reader.GetOrdinal("nameProduct")),
+                Quantity = reader.GetInt32(reader.GetOrdinal("quantity"))
+            };
+        }
 
+        private static Arrivals ReadArrival(MySqlDataReader reader)
+        {
+            return new Arrivals
+            {
+                IdArrivals = reader.GetInt32(reader.GetOrdinal("idArrivals")),
+                DateTime = reader.GetDateTime(reader.GetOrdinal("date")).Date,
+                ProductId = reader.GetInt32(reader.GetOrdinal("productId")),
+                Quantity = reader.GetInt32(reader.GetOrdinal("quantity"))
+            };
+        }
 
-
-
-
-
-
-
+        private static Expenses ReadExpense(MySqlDataReader reader)
+        {
+            return new Expenses
+            {
+                IdExpenses = reader.GetInt32(reader.GetOrdinal("idExpenses")),
+                DateTime = reader.GetDateTime(reader.GetOrdinal("dateExpenses")).Date,
+                ProductId = reader.GetInt32(reader.GetOrdinal("productId")),
+                Quantity = reader.GetInt32(reader.GetOrdinal("quantity"))
+            };
+        }
     }
-
-
 }

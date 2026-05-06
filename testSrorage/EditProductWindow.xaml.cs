@@ -1,30 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using testSrorage.классы;
+using testSrorage.классы.интерфейсы;
 
 namespace testSrorage
 {
-    
     public partial class EditProductWindow : Window
     {
-        DBManager manager = new DBManager();
-        private Products product = new Products();
+        private readonly IStorageService storageService = new StorageService();
+        private readonly Products product;
+
         public EditProductWindow(Products selectedProduct)
         {
             InitializeComponent();
             product = selectedProduct;
             LoadProductData();
         }
+
         private void LoadProductData()
         {
             txtProductId.Text = product.IdProduct.ToString();
@@ -34,45 +25,32 @@ namespace testSrorage
 
         private void btnSaveProduct_Click(object sender, RoutedEventArgs e)
         {
-            
-            try
+            if (string.IsNullOrWhiteSpace(txtProductName.Text))
             {
-                
-                if (string.IsNullOrWhiteSpace(txtProductName.Text))
-                {
-                    MessageBox.Show("Введите название продукта");
-                    txtProductName.Focus();
-                    return;
-                }
-
-                if (!int.TryParse(txtProductQuantity.Text, out int quantity) || quantity < 0)
-                {
-                    MessageBox.Show("Введите корректное количество (0 или больше)");
-                    txtProductQuantity.Focus();
-                    txtProductQuantity.SelectAll();
-                    return;
-                }
-
-               
-                product.Name = txtProductName.Text.Trim();
-                product.Quantity = quantity;
-
-                
-                if (manager.UpdateProduct(product))
-                {
-                    MessageBox.Show("Продукт успешно обновлен!");
-                    DialogResult = true;
-                    Close();
-                }
-                else
-                {
-                    MessageBox.Show("Не удалось обновить продукт");
-                }
+                MessageBox.Show("Введите название продукта.");
+                txtProductName.Focus();
+                return;
             }
-            catch (Exception ex)
+
+            if (!int.TryParse(txtProductQuantity.Text, out int quantity) || quantity < 0)
             {
-                MessageBox.Show($"Ошибка при сохранении: {ex.Message}");
+                MessageBox.Show("Введите корректное количество (0 или больше).");
+                txtProductQuantity.Focus();
+                txtProductQuantity.SelectAll();
+                return;
             }
+
+            product.Name = txtProductName.Text.Trim();
+            product.Quantity = quantity;
+
+            OperationResult result = storageService.UpdateProduct(product);
+            MessageBox.Show(result.Message);
+
+            if (!result.Success)
+                return;
+
+            DialogResult = true;
+            Close();
         }
 
         private void btnCancelProduct_Click(object sender, RoutedEventArgs e)
@@ -80,7 +58,5 @@ namespace testSrorage
             DialogResult = false;
             Close();
         }
-
-        
     }
 }

@@ -1,173 +1,130 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using testSrorage.классы;
+using testSrorage.классы.интерфейсы;
 
 namespace testSrorage
 {
-    
     public partial class MainWindow : Window
     {
-        
-        
+        private readonly IStorageService storageService = new StorageService();
 
         public MainWindow()
         {
-
             InitializeComponent();
-           
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-
-            DB databa = new DB();
-            databa.OpenConnection();
+            ShowResult(storageService.CheckConnection());
         }
 
         private void checkBtn1_Click(object sender, RoutedEventArgs e)
         {
-           DBManager maneger = new DBManager();
-            datagrid.ItemsSource = null;
-            List<Products> products = maneger.GetAllProducts();
-            if (products != null)
-            {
-                datagrid.ItemsSource = products;
-            }
-
+            LoadProducts();
         }
 
         private void arrivalBtn_Click(object sender, RoutedEventArgs e)
         {
             AddArrivalWindow addArrivalWindow = new AddArrivalWindow();
-            addArrivalWindow.Show();
+            addArrivalWindow.ShowDialog();
+            LoadProducts();
         }
 
         private void checkArriveBtn_Click(object sender, RoutedEventArgs e)
         {
-            DBManager maneger = new DBManager();
-            datagrid.ItemsSource = null;
-            
-            List<Arrivals> arrivals = maneger.GetAllArrivals();
-            if(arrivals != null)
-            {
-                datagrid.ItemsSource = arrivals;
-
-            }
-            
+            LoadArrivals();
         }
 
         private void checkExpensesBtn_Click(object sender, RoutedEventArgs e)
         {
-            DBManager maneger = new DBManager();
-            datagrid.ItemsSource = null;
-
-            List<Expenses> expenseses = maneger.GetAllExpenses();
-            if (expenseses != null)
-            {
-                datagrid.ItemsSource = expenseses;
-
-            }
-
+            LoadExpenses();
         }
 
         private void addExpenesBtn_Click(object sender, RoutedEventArgs e)
         {
             AddExpensesWindow addExpensesWindow = new AddExpensesWindow();
-            addExpensesWindow.Show();
+            addExpensesWindow.ShowDialog();
+            LoadProducts();
         }
 
         private void deletBtn_Click(object sender, RoutedEventArgs e)
         {
-            DBManager maneger = new DBManager();
-
-            var selectedItem  = datagrid.SelectedItem;
-
-            if (selectedItem is Products product) 
+            try
             {
-                maneger.DeleteProduct(product);
-                datagrid.ItemsSource = null;
-                List<Products> products = maneger.GetAllProducts();
-                if (products != null)
+                if (datagrid.SelectedItem == null)
                 {
-                    datagrid.ItemsSource = products;
+                    MessageBox.Show("Выберите объект для удаления.");
+                    return;
+                }
+
+                if (datagrid.SelectedItem is Products product)
+                {
+                    int relatedCount = storageService.CountProductDocuments(product.IdProduct);
+                    if (relatedCount > 0)
+                    {
+                        MessageBoxResult confirmation = MessageBox.Show(
+                            "У продукта есть " + relatedCount + " связанных записей (приходы/расходы).\nУдалить продукт и все связанные записи?",
+                            "Подтверждение удаления",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (confirmation != MessageBoxResult.Yes)
+                            return;
+                    }
+
+                    ShowResult(storageService.DeleteProduct(product));
+                    LoadProducts();
+                }
+                else if (datagrid.SelectedItem is Arrivals arrival)
+                {
+                    ShowResult(storageService.DeleteArrival(arrival));
+                    LoadArrivals();
+                }
+                else if (datagrid.SelectedItem is Expenses expense)
+                {
+                    ShowResult(storageService.DeleteExpense(expense));
+                    LoadExpenses();
                 }
             }
-            else if (selectedItem is Arrivals arrival )
+            catch (Exception ex)
             {
-                maneger.DeleteArrival(arrival.IdArrivals);
-                datagrid.ItemsSource= null;
-                List<Arrivals> arrivals = maneger.GetAllArrivals();
-                if (arrivals != null)
-                {
-                    datagrid.ItemsSource = arrivals;
-
-                }
-
-
+                MessageBox.Show("Ошибка удаления данных: " + ex.Message);
             }
-            else if(selectedItem is Expenses expense ) 
-            { 
-                maneger.DeleteExpense(expense.IdExpenses);
-                datagrid.ItemsSource=null;
-                List<Expenses> expenseses = maneger.GetAllExpenses();
-                if (expenseses != null)
-                {
-                    datagrid.ItemsSource = expenseses;
-
-                }
-
-
-            }
-
-
-
         }
 
         private void changeBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (datagrid.SelectedItems == null)
+            if (datagrid.SelectedItem == null)
             {
-                MessageBox.Show("Выберите обьект для редактирования");
+                MessageBox.Show("Выберите объект для редактирования.");
                 return;
             }
-            else
+
+            if (datagrid.SelectedItem is Products product)
             {
-                var selectedItem = datagrid.SelectedItem;
-                if (selectedItem is Products product)
-                {
-                    EditProductWindow editProductWindow = new EditProductWindow(product);
-                    editProductWindow.ShowDialog();
-                }
-                else if (selectedItem is Arrivals arrival)
-                {
-                    EditArrivalWindow editArrivalWindow = new EditArrivalWindow(arrival);
-                    editArrivalWindow.ShowDialog();
-                }
-                else if (selectedItem is Expenses expense) 
-                {
-                    EditExpensesWindow editExpensesWindow = new EditExpensesWindow(expense);
-                    editExpensesWindow.ShowDialog();
-                }
-              
-                
+                EditProductWindow editProductWindow = new EditProductWindow(product);
+                if (editProductWindow.ShowDialog() == true)
+                    LoadProducts();
+            }
+            else if (datagrid.SelectedItem is Arrivals arrival)
+            {
+                EditArrivalWindow editArrivalWindow = new EditArrivalWindow(arrival);
+                if (editArrivalWindow.ShowDialog() == true)
+                    LoadArrivals();
+            }
+            else if (datagrid.SelectedItem is Expenses expense)
+            {
+                EditExpensesWindow editExpensesWindow = new EditExpensesWindow(expense);
+                if (editExpensesWindow.ShowDialog() == true)
+                    LoadExpenses();
             }
         }
 
         private void arriveDataBtn_Click(object sender, RoutedEventArgs e)
         {
-            IncomeReportWindow incomeReportWindow = new IncomeReportWindow();   
+            IncomeReportWindow incomeReportWindow = new IncomeReportWindow();
             incomeReportWindow.ShowDialog();
         }
 
@@ -175,6 +132,39 @@ namespace testSrorage
         {
             ExpensesReportWindiw expensesReportWindiw = new ExpensesReportWindiw();
             expensesReportWindiw.ShowDialog();
+        }
+
+        private void LoadProducts()
+        {
+            LoadGrid(() => storageService.GetProducts());
+        }
+
+        private void LoadArrivals()
+        {
+            LoadGrid(() => storageService.GetArrivals());
+        }
+
+        private void LoadExpenses()
+        {
+            LoadGrid(() => storageService.GetExpenses());
+        }
+
+        private void LoadGrid<T>(Func<List<T>> loadData)
+        {
+            try
+            {
+                datagrid.ItemsSource = null;
+                datagrid.ItemsSource = loadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки данных: " + ex.Message);
+            }
+        }
+
+        private static void ShowResult(OperationResult result)
+        {
+            MessageBox.Show(result.Message);
         }
     }
 }

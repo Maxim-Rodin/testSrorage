@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:testSrorage.классы"
         mc:Ignorable="d"
-        Title="ExpensesReportWindiw" Height="450" Width="800">
+        Title="Отчет по расходам" Height="450" Width="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
-        <TextBlock Grid.Row="0" Text="Отчет по приходам" 
+        <TextBlock Grid.Row="0" Text="Отчет по расходам" 
                    FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
 
         <!-- Параметры отчета -->

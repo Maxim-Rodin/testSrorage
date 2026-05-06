@@ -1,26 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using testSrorage.классы;
+using testSrorage.классы.интерфейсы;
 
 namespace testSrorage
 {
-    
     public partial class AddExpensesWindow : Window
     {
-        private DB connect = new DB();
-        private DBManager maneger = new DBManager();
-        private bool IsDataSaved = false;
+        private readonly IStorageService storageService = new StorageService();
+        private bool isDataSaved;
 
         public AddExpensesWindow()
         {
@@ -29,90 +17,59 @@ namespace testSrorage
 
         private void aplyBtn_Click(object sender, RoutedEventArgs e)
         {
-            try
+            if (string.IsNullOrWhiteSpace(nameTxBx.Text))
             {
-                if (string.IsNullOrEmpty(nameTxBx.Text))
-                {
-                    MessageBox.Show("Введите имя товара!");
-                    nameTxBx.Focus();
-                    return;
-                }
-
-                if (!int.TryParse(quantityTxBx.Text, out int quantity) || quantity <= 0)
-                {
-                    MessageBox.Show("Количество должно быть больше 0!");
-                    quantityTxBx.Focus();
-                    return;
-                }
-
-                if (dataPiker.SelectedDate == null)
-                {
-                    MessageBox.Show("Выберите дату!");
-                    dataPiker.Focus();
-                    return;
-                }
-
-                string productName = nameTxBx.Text.Trim();
-                DateTime dateTime = dataPiker.SelectedDate.Value;
-
-                
-                Products existingProduct = maneger.GetProductByName(productName);
-
-              
-                if (existingProduct == null)
-                {
-                    MessageBox.Show($"Товар '{productName}' не найден в базе данных!");
-                    return;  
-                }
-
-               
-                if (existingProduct.Quantity < quantity)
-                {
-                    MessageBox.Show($"Невозможно провести расход: требуется {quantity}, на складе {existingProduct.Quantity}");
-                    return;  
-                }
-
-                
-                maneger.UpdateProductQuantity(existingProduct.IdProduct, quantity, false);
-
-               
-                Expenses expenses = new Expenses
-                {
-                    DateTime = dateTime,
-                    ProductId = existingProduct.IdProduct, 
-                    Quantity = quantity,
-                };
-
-                if (!maneger.AddExpenses(expenses))
-                {
-                    throw new Exception("Ошибка при сохранении расхода!");
-                }
-
-                MessageBox.Show("Расход успешно добавлен!");
-                IsDataSaved = true;
-                Close();
+                MessageBox.Show("Введите имя товара!");
+                nameTxBx.Focus();
+                return;
             }
-            catch (Exception ex)
+
+            if (!int.TryParse(quantityTxBx.Text, out int quantity) || quantity <= 0)
             {
-                MessageBox.Show($"Ошибка добавления расхода: {ex.Message}");
+                MessageBox.Show("Количество должно быть больше 0!");
+                quantityTxBx.Focus();
+                return;
             }
+
+            if (dataPiker.SelectedDate == null)
+            {
+                MessageBox.Show("Выберите дату!");
+                dataPiker.Focus();
+                return;
+            }
+
+            OperationResult result = storageService.AddExpense(
+                nameTxBx.Text,
+                quantity,
+                dataPiker.SelectedDate.Value);
+
+            MessageBox.Show(result.Message);
+
+            if (!result.Success)
+                return;
+
+            isDataSaved = true;
+            DialogResult = true;
+            Close();
         }
 
         private void canсelBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsDataSaved)
+            if (!isDataSaved)
             {
-                MessageBoxResult result = MessageBox.Show("Вы хотите отменить операцию? Все изменения будут потеряны.",
-                "Подтверждение отмены", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                MessageBoxResult result = MessageBox.Show(
+                    "Вы хотите отменить операцию? Все изменения будут потеряны.",
+                    "Подтверждение отмены",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
                 if (result == MessageBoxResult.Yes)
-                {
                     Close();
-                }
+
+                return;
             }
-            else
-            {
-                Close();
-            }
+
+            Close();
         }
     }
 }

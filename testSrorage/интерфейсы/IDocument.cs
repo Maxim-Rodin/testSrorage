@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
 namespace testSrorage.классы.интерфейсы
 {
@@ -11,7 +7,5 @@ namespace testSrorage.классы.интерфейсы
         DateTime DateTime { get; set; }
         int ProductId { get; set; }
         int Quantity { get; set; }
-
-      
     }
 }
