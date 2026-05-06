@@ -1,17 +1,17 @@
-using System;
 using System.Linq;
 using System.Windows;
-using testSrorage.классы;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
     public partial class EditExpensesWindow : Window
     {
-        private readonly IStorageService storageService = new StorageService();
-        private readonly Expenses expense;
+        private readonly IStorageService storageService = App.CurrentStorageService;
+        private readonly Expense expense;
 
-        public EditExpensesWindow(Expenses selectedExpense)
+        public EditExpensesWindow(Expense selectedExpense)
         {
             InitializeComponent();
             expense = selectedExpense;
@@ -20,14 +20,14 @@ namespace testSrorage
 
         private void LoadData()
         {
-            txtExpenseId.Text = expense.IdExpenses.ToString();
+            txtExpenseId.Text = expense.Id.ToString();
             dpExpenseDate.SelectedDate = expense.DateTime;
             txtExpenseQuantity.Text = expense.Quantity.ToString();
 
             var products = storageService.GetProducts();
             cmbExpenseProducts.ItemsSource = products;
 
-            Products currentProduct = products.FirstOrDefault(p => p.IdProduct == expense.ProductId);
+            Product currentProduct = products.FirstOrDefault(p => p.Id == expense.ProductId);
             if (currentProduct != null)
                 cmbExpenseProducts.SelectedItem = currentProduct;
         }
@@ -46,7 +46,8 @@ namespace testSrorage
                 return;
             }
 
-            if (!int.TryParse(txtExpenseQuantity.Text, out int quantity) || quantity <= 0)
+            int quantity;
+            if (!int.TryParse(txtExpenseQuantity.Text, out quantity) || quantity <= 0)
             {
                 MessageBox.Show("Введите корректное количество.");
                 return;
@@ -54,7 +55,7 @@ namespace testSrorage
 
             expense.DateTime = dpExpenseDate.SelectedDate.Value.Date;
             expense.Quantity = quantity;
-            expense.ProductId = ((Products)cmbExpenseProducts.SelectedItem).IdProduct;
+            expense.ProductId = ((Product)cmbExpenseProducts.SelectedItem).Id;
 
             OperationResult result = storageService.UpdateExpense(expense);
             MessageBox.Show(result.Message);

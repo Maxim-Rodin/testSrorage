@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using testSrorage.классы;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
     public partial class MainWindow : Window
     {
-        private readonly IStorageService storageService = new StorageService();
+        private readonly IStorageService storageService = App.CurrentStorageService;
 
         public MainWindow()
         {
@@ -59,9 +60,9 @@ namespace testSrorage
                     return;
                 }
 
-                if (datagrid.SelectedItem is Products product)
+                if (datagrid.SelectedItem is Product product)
                 {
-                    int relatedCount = storageService.CountProductDocuments(product.IdProduct);
+                    int relatedCount = storageService.CountProductDocuments(product.Id);
                     if (relatedCount > 0)
                     {
                         MessageBoxResult confirmation = MessageBox.Show(
@@ -77,12 +78,12 @@ namespace testSrorage
                     ShowResult(storageService.DeleteProduct(product));
                     LoadProducts();
                 }
-                else if (datagrid.SelectedItem is Arrivals arrival)
+                else if (datagrid.SelectedItem is Arrival arrival)
                 {
                     ShowResult(storageService.DeleteArrival(arrival));
                     LoadArrivals();
                 }
-                else if (datagrid.SelectedItem is Expenses expense)
+                else if (datagrid.SelectedItem is Expense expense)
                 {
                     ShowResult(storageService.DeleteExpense(expense));
                     LoadExpenses();
@@ -102,19 +103,19 @@ namespace testSrorage
                 return;
             }
 
-            if (datagrid.SelectedItem is Products product)
+            if (datagrid.SelectedItem is Product product)
             {
                 EditProductWindow editProductWindow = new EditProductWindow(product);
                 if (editProductWindow.ShowDialog() == true)
                     LoadProducts();
             }
-            else if (datagrid.SelectedItem is Arrivals arrival)
+            else if (datagrid.SelectedItem is Arrival arrival)
             {
                 EditArrivalWindow editArrivalWindow = new EditArrivalWindow(arrival);
                 if (editArrivalWindow.ShowDialog() == true)
                     LoadArrivals();
             }
-            else if (datagrid.SelectedItem is Expenses expense)
+            else if (datagrid.SelectedItem is Expense expense)
             {
                 EditExpensesWindow editExpensesWindow = new EditExpensesWindow(expense);
                 if (editExpensesWindow.ShowDialog() == true)

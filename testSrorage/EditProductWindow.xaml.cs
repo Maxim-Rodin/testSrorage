@@ -1,15 +1,16 @@
 using System.Windows;
-using testSrorage.классы;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
     public partial class EditProductWindow : Window
     {
-        private readonly IStorageService storageService = new StorageService();
-        private readonly Products product;
+        private readonly IStorageService storageService = App.CurrentStorageService;
+        private readonly Product product;
 
-        public EditProductWindow(Products selectedProduct)
+        public EditProductWindow(Product selectedProduct)
         {
             InitializeComponent();
             product = selectedProduct;
@@ -18,7 +19,7 @@ namespace testSrorage
 
         private void LoadProductData()
         {
-            txtProductId.Text = product.IdProduct.ToString();
+            txtProductId.Text = product.Id.ToString();
             txtProductName.Text = product.Name;
             txtProductQuantity.Text = product.Quantity.ToString();
         }
@@ -32,7 +33,8 @@ namespace testSrorage
                 return;
             }
 
-            if (!int.TryParse(txtProductQuantity.Text, out int quantity) || quantity < 0)
+            int quantity;
+            if (!int.TryParse(txtProductQuantity.Text, out quantity) || quantity < 0)
             {
                 MessageBox.Show("Введите корректное количество (0 или больше).");
                 txtProductQuantity.Focus();

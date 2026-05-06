@@ -1,6 +1,6 @@
-namespace testSrorage.классы
+namespace testSrorage.Application
 {
-    internal sealed class ReportSummary
+    public sealed class ReportSummary
     {
         public ReportSummary(int totalQuantity, int recordCount)
         {

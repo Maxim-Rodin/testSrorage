@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
-namespace testSrorage.классы
+namespace testSrorage
 {
     public partial class ExpensesReportWindiw : Window
     {
-        private readonly IStorageService storageService = new StorageService();
-        private List<Expenses> currentReport = new List<Expenses>();
+        private readonly IStorageService storageService = App.CurrentStorageService;
+        private List<Expense> currentReport = new List<Expense>();
 
         public ExpensesReportWindiw()
         {

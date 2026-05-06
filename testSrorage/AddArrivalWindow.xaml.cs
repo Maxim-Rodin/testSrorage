@@ -1,13 +1,12 @@
-using System;
 using System.Windows;
-using testSrorage.классы;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
 
 namespace testSrorage
 {
     public partial class AddArrivalWindow : Window
     {
-        private readonly IStorageService storageService = new StorageService();
+        private readonly IStorageService storageService = App.CurrentStorageService;
         private bool isDataSaved;
 
         public AddArrivalWindow()
@@ -43,7 +42,8 @@ namespace testSrorage
                 return;
             }
 
-            if (!int.TryParse(quantityTxBx.Text, out int quantity) || quantity <= 0)
+            int quantity;
+            if (!int.TryParse(quantityTxBx.Text, out quantity) || quantity <= 0)
             {
                 MessageBox.Show("Количество должно быть больше 0!");
                 quantityTxBx.Focus();

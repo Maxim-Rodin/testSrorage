@@ -1,6 +1,6 @@
-namespace testSrorage.классы
+namespace testSrorage.Application
 {
-    internal sealed class OperationResult
+    public sealed class OperationResult
     {
         private OperationResult(bool success, string message)
         {

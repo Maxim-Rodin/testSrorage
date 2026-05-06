@@ -1,9 +1,8 @@
-﻿<Application x:Class="testSrorage.App"
+<Application x:Class="testSrorage.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:testSrorage"
-             StartupUri="MainWindow.xaml">
+             xmlns:local="clr-namespace:testSrorage">
     <Application.Resources>
-         
+
     </Application.Resources>
 </Application>

@@ -1,9 +1,10 @@
 using System;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Domain.Attributes;
 
-namespace testSrorage.классы
+namespace testSrorage.Domain
 {
-    public abstract class DocumentBase : IDocument
+    [Table("expenses")]
+    public class Expense : BaseEntity, IStorageDocument
     {
         public DateTime DateTime { get; set; }
         public int ProductId { get; set; }

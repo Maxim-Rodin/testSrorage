@@ -1,8 +1,8 @@
 using System;
 
-namespace testSrorage.классы.интерфейсы
+namespace testSrorage.Domain
 {
-    public interface IDocument
+    public interface IStorageDocument
     {
         DateTime DateTime { get; set; }
         int ProductId { get; set; }

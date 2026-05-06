@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using testSrorage.классы;
-using testSrorage.классы.интерфейсы;
+using testSrorage.Application;
+using testSrorage.Application.Interfaces;
+using testSrorage.Domain;
 
 namespace testSrorage
 {
     public partial class IncomeReportWindow : Window
     {
-        private readonly IStorageService storageService = new StorageService();
-        private List<Arrivals> currentReport = new List<Arrivals>();
+        private readonly IStorageService storageService = App.CurrentStorageService;
+        private List<Arrival> currentReport = new List<Arrival>();
 
         public IncomeReportWindow()
         {

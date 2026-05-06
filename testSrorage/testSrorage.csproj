@@ -78,9 +78,21 @@
     <Compile Include="IncomeReportWindow.xaml.cs">
       <DependentUpon>IncomeReportWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="интерфейсы\IDocument.cs" />
-    <Compile Include="интерфейсы\IStorageRepository.cs" />
-    <Compile Include="интерфейсы\IStorageService.cs" />
+    <Compile Include="Application\Interfaces\IRepository.cs" />
+    <Compile Include="Application\Interfaces\IStorageService.cs" />
+    <Compile Include="Application\OperationResult.cs" />
+    <Compile Include="Application\ReportSummary.cs" />
+    <Compile Include="Application\StorageService.cs" />
+    <Compile Include="Domain\Arrival.cs" />
+    <Compile Include="Domain\Attributes\TableAttribute.cs" />
+    <Compile Include="Domain\BaseEntity.cs" />
+    <Compile Include="Domain\Expense.cs" />
+    <Compile Include="Domain\IStorageDocument.cs" />
+    <Compile Include="Domain\Product.cs" />
+    <Compile Include="Infrastructure\DatabaseInitializer.cs" />
+    <Compile Include="Infrastructure\DbConnectionFactory.cs" />
+    <Compile Include="Infrastructure\EntityMetadata.cs" />
+    <Compile Include="Infrastructure\GenericRepository.cs" />
     <Page Include="AddArrivalWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -113,18 +125,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="классы\Arrivals.cs" />
-    <Compile Include="классы\DB.cs" />
-    <Compile Include="классы\DBManeger.cs" />
-    <Compile Include="классы\DocumentBase.cs" />
-    <Compile Include="классы\Expenses.cs" />
     <Compile Include="классы\ExpensesReportWindiw.xaml.cs">
       <DependentUpon>ExpensesReportWindiw.xaml</DependentUpon>
     </Compile>
-    <Compile Include="классы\OperationResult.cs" />
-    <Compile Include="классы\Products.cs" />
-    <Compile Include="классы\ReportSummary.cs" />
-    <Compile Include="классы\StorageService.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
